@@ -1,0 +1,38 @@
+version: "3.8"
+
+services:
+  # TestRunner application
+  testrunner:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      # Mount target repository (current directory by default)
+      - ${TARGET_REPO:-.}:/workspace:rw
+      # Persist test history database
+      - testrunner_data:/data
+      # Output reports
+      - ${REPORTS_DIR:-./reports}:/reports:rw
+    environment:
+      # Point to your external Ollama instance
+      # Override with: OLLAMA_HOST=http://your-ollama-host:11434
+      - OLLAMA_HOST=${OLLAMA_HOST:-http://host.docker.internal:11434}
+      - TESTRUNNER_DATA_DIR=/data
+      - TESTRUNNER_REPORTS_DIR=/reports
+    extra_hosts:
+      # Allow container to reach host machine's localhost (for local Ollama)
+      - "host.docker.internal:host-gateway"
+    networks:
+      - testrunner_network
+    # Override command for different operations
+    # Default: testrunner --help
+    # Run tests: docker-compose run testrunner run
+    # Init config: docker-compose run testrunner init
+
+networks:
+  testrunner_network:
+    driver: bridge
+
+volumes:
+  testrunner_data:
+    name: testrunner_history_data
