@@ -1,0 +1,35 @@
+{
+  "project": {
+    "name": "my-project",
+    "language": "python",
+    "description": "Brief description of your project for LLM context"
+  },
+  "test": {
+    "command": "pytest",
+    "args": ["-v", "--tb=short"],
+    "test_directory": "tests/",
+    "timeout_seconds": 300,
+    "fail_fast": false
+  },
+  "llm": {
+    "provider": "ollama",
+    "model": "llama3.2",
+    "base_url": "http://localhost:11434",
+    "timeout_seconds": 120,
+    "_comment": "Point base_url to your running Ollama instance (e.g., http://localhost:11434 or http://your-server:11434)"
+  },
+  "hints_file": "HINTS.md",
+  "report": {
+    "output_dir": "./reports",
+    "filename": "test_report.html",
+    "title": "Test Results"
+  },
+  "git": {
+    "enabled": true,
+    "compare_ref": "HEAD~5",
+    "include_uncommitted": true
+  },
+  "storage": {
+    "database_path": ".testrunner/history.db"
+  }
+}

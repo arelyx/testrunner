@@ -1,0 +1,41 @@
+# TestRunner Hints
+
+This file provides additional context to the LLM for better test analysis.
+Copy this to `HINTS.md` and customize it for your project.
+
+## Project Overview
+
+Describe your project's purpose and architecture here. This helps the LLM
+understand the codebase structure and make better predictions about which
+tests might be affected by code changes.
+
+## Critical Paths
+
+List the most important parts of your codebase:
+
+- `src/auth/` - Authentication system, changes here affect many tests
+- `src/api/` - API endpoints, high test coverage
+- `src/database/` - Database models and queries
+
+## Known Flaky Tests
+
+List tests that are known to be unreliable:
+
+- `tests/test_network.py::test_timeout` - Occasionally fails due to network issues
+- `tests/test_async.py::test_race_condition` - Timing-dependent
+
+## Test Dependencies
+
+Describe any external dependencies your tests require:
+
+- Database: Tests require a PostgreSQL connection
+- Redis: Some tests use Redis for caching
+- External APIs: Mock services are used for third-party integrations
+
+## Additional Context
+
+Add any other information that would help the LLM understand your testing setup:
+
+- We use pytest fixtures extensively
+- Integration tests are in `tests/integration/`
+- Unit tests are in `tests/unit/`
