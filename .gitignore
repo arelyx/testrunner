@@ -75,3 +75,6 @@ Thumbs.db
 
 # Test repositories (potential submodules)
 test_repos/
+
+# Local config (machine-specific settings)
+testrunner.json

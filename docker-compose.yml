@@ -16,12 +16,14 @@ services:
     environment:
       # Point to your external Ollama instance
       # Override with: OLLAMA_HOST=http://your-ollama-host:11434
-      - OLLAMA_HOST=${OLLAMA_HOST:-http://host.docker.internal:11434}
+      - OLLAMA_HOST=${OLLAMA_HOST:-http://insight:11434}
       - TESTRUNNER_DATA_DIR=/data
       - TESTRUNNER_REPORTS_DIR=/reports
     extra_hosts:
       # Allow container to reach host machine's localhost (for local Ollama)
       - "host.docker.internal:host-gateway"
+      # Tailscale host for Ollama
+      - "insight:100.117.111.65"
     networks:
       - testrunner_network
     # Override command for different operations
