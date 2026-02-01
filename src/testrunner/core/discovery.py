@@ -68,8 +68,9 @@ class TestDiscovery:
         """Discover tests using pytest's collection."""
         try:
             # Use pytest --collect-only to discover tests
+            # Note: -qq (double quiet) needed for line-based output in pytest 9.x
             result = subprocess.run(
-                ["pytest", "--collect-only", "-q", "--no-header", str(self.test_dir)],
+                ["pytest", "--collect-only", "-qq", str(self.test_dir)],
                 capture_output=True,
                 text=True,
                 cwd=self.base_dir,
