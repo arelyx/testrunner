@@ -113,6 +113,11 @@ class RiskScorer:
         # Combine all factors into final scores
         scores = {}
         for test in discovered.tests:
+            # LLM might return scores by test name OR file path, try both
+            llm_score = llm_risks.get(test.name, 0.0)
+            if llm_score == 0.0 and test.file_path:
+                llm_score = llm_risks.get(test.file_path, 0.0)
+            
             factors = RiskFactors(
                 historical_failure_rate=historical_data.get(test.name, {}).get(
                     "failure_rate", 0.0
@@ -122,7 +127,7 @@ class RiskScorer:
                 ),
                 affected_by_changes=test.file_path in proximity_scores
                 and proximity_scores[test.file_path] > 0,
-                llm_risk_score=llm_risks.get(test.name, 0.0),
+                llm_risk_score=llm_score,
                 file_change_proximity=proximity_scores.get(test.file_path, 0.0),
             )
 
