@@ -109,8 +109,6 @@ def run(ctx: click.Context, report: bool) -> None:
         sys.exit(1)
 
     # Import new components
-    import os
-
     from testrunner.core.executor import TestExecutor
     from testrunner.llm.parser import LLMOutputParser
     from testrunner.llm.analyzer import FailureAnalyzer
@@ -128,11 +126,8 @@ def run(ctx: click.Context, report: bool) -> None:
     if config.llm.provider == "openrouter":
         from testrunner.llm.openrouter import OpenRouterClient
 
-        api_key = None
-        if config.llm.api_key_env:
-            api_key = os.environ.get(config.llm.api_key_env)
         llm_client = OpenRouterClient(
-            api_key=api_key,
+            api_key=config.llm.resolve_api_key(base_dir),
             model=config.llm.model,
             base_url=config.llm.base_url,
             timeout=config.llm.timeout_seconds,

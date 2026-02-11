@@ -1,6 +1,7 @@
 """Configuration management for TestRunner."""
 
 import json
+import os
 from pathlib import Path
 from typing import Optional
 
@@ -51,6 +52,10 @@ class LLMConfig(BaseModel):
         default=None,
         description="Environment variable name containing the API key (e.g. OPENROUTER_API_KEY)",
     )
+    api_key_file: Optional[str] = Field(
+        default=None,
+        description="Path to a file containing the API key (e.g. orkey.secret)",
+    )
 
     @field_validator("provider")
     @classmethod
@@ -59,6 +64,42 @@ class LLMConfig(BaseModel):
         if v.lower() not in allowed:
             raise ValueError(f"Provider must be one of: {allowed}")
         return v.lower()
+
+    def resolve_api_key(self, base_dir: Path | str | None = None) -> Optional[str]:
+        """Resolve the API key from environment variable or file.
+
+        Resolution order:
+        1. Environment variable (api_key_env)
+        2. Secret file (api_key_file), resolved relative to base_dir
+        3. OPENROUTER_API_KEY env var as fallback for openrouter provider
+
+        Returns:
+            The API key string, or None if not found.
+        """
+        # 1. Check explicit env var
+        if self.api_key_env:
+            key = os.environ.get(self.api_key_env)
+            if key:
+                return key.strip()
+
+        # 2. Check secret file
+        if self.api_key_file:
+            if base_dir is None:
+                base_dir = Path.cwd()
+            else:
+                base_dir = Path(base_dir)
+
+            key_path = base_dir / self.api_key_file
+            if key_path.exists():
+                return key_path.read_text().strip()
+
+        # 3. Fallback for openrouter: check default env var
+        if self.provider == "openrouter":
+            key = os.environ.get("OPENROUTER_API_KEY")
+            if key:
+                return key.strip()
+
+        return None
 
 
 class ReportConfig(BaseModel):

@@ -180,14 +180,10 @@ def run_testrunner(repo_path: Path, config: dict) -> dict:
 
         # Initialize LLM client based on provider
         if tr_config.llm.provider == "openrouter":
-            import os
             from testrunner.llm.openrouter import OpenRouterClient
 
-            api_key = None
-            if tr_config.llm.api_key_env:
-                api_key = os.environ.get(tr_config.llm.api_key_env)
             llm_client = OpenRouterClient(
-                api_key=api_key,
+                api_key=tr_config.llm.resolve_api_key(repo_path),
                 model=tr_config.llm.model,
                 base_url=tr_config.llm.base_url,
                 timeout=tr_config.llm.timeout_seconds,
