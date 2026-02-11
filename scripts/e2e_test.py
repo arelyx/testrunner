@@ -219,7 +219,12 @@ def run_testrunner(repo_path: Path, config: dict) -> dict:
         tr_config = TestRunnerConfig.from_file(config_file)
 
         # Override LLM settings from e2e config
-        if "ollama" in config:
+        if "llm" in config:
+            llm_override = config["llm"]
+            tr_config.llm.provider = llm_override.get("provider", tr_config.llm.provider)
+            tr_config.llm.base_url = llm_override.get("base_url", tr_config.llm.base_url)
+            tr_config.llm.model = llm_override.get("model", tr_config.llm.model)
+        elif "ollama" in config:
             tr_config.llm.base_url = config["ollama"]["base_url"]
             tr_config.llm.model = config["ollama"]["model"]
 
@@ -227,8 +232,9 @@ def run_testrunner(repo_path: Path, config: dict) -> dict:
         paths = tr_config.get_absolute_paths(repo_path)
         paths["report_output_dir"].mkdir(parents=True, exist_ok=True)
 
-        # Load .env from repo directory
+        # Load .env from project root and repo directory
         from dotenv import load_dotenv
+        load_dotenv(PROJECT_ROOT / ".env")
         load_dotenv(repo_path / ".env")
 
         # Initialize LLM client based on provider
