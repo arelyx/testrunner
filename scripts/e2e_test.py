@@ -134,6 +134,55 @@ def install_repo_dependencies(repo_path: Path) -> bool:
         except Exception:
             return False
 
+    # Go dependencies
+    go_mod = repo_path / "go.mod"
+    if go_mod.exists():
+        try:
+            console.print(f"  [dim]Downloading Go modules...[/dim]")
+            subprocess.run(
+                ["go", "mod", "download"],
+                cwd=repo_path,
+                capture_output=True,
+                text=True,
+                timeout=120,
+            )
+        except Exception:
+            pass  # go test will handle deps itself
+
+    # Rust dependencies (pre-fetch to speed up test run)
+    cargo_toml = repo_path / "Cargo.toml"
+    if cargo_toml.exists():
+        try:
+            console.print(f"  [dim]Building Rust dependencies...[/dim]")
+            subprocess.run(
+                ["cargo", "build", "--tests"],
+                cwd=repo_path,
+                capture_output=True,
+                text=True,
+                timeout=300,
+            )
+        except Exception:
+            pass  # cargo test will handle deps itself
+
+    # Java compilation
+    run_tests_sh = repo_path / "run_tests.sh"
+    java_src = repo_path / "src"
+    if run_tests_sh.exists() and java_src.exists():
+        try:
+            console.print(f"  [dim]Compiling Java sources...[/dim]")
+            # Find all .java files and compile them
+            java_files = list(java_src.rglob("*.java")) + list((repo_path / "tests").rglob("*.java")) if (repo_path / "tests").exists() else list(java_src.rglob("*.java"))
+            if java_files:
+                subprocess.run(
+                    ["javac", "-d", "build"] + [str(f) for f in java_files],
+                    cwd=repo_path,
+                    capture_output=True,
+                    text=True,
+                    timeout=60,
+                )
+        except Exception:
+            pass  # run_tests.sh handles compilation
+
     return True
 
 
