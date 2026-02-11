@@ -212,6 +212,9 @@ def run(ctx: click.Context, report: bool) -> None:
 
             if verbose:
                 console.print(f"[dim]Parsed {len(parsed.tests)} tests (confidence: {parsed.parse_confidence:.0%})[/dim]")
+                if llm_client.last_raw_content:
+                    console.print("\n[bold]LLM Parser Response:[/bold]")
+                    console.print(Panel(llm_client.last_raw_content, border_style="dim", expand=False))
         except Exception as e:
             progress.update(task, completed=True)
             console.print(f"[red]Error parsing test output:[/red] {e}")
@@ -264,6 +267,13 @@ def run(ctx: click.Context, report: bool) -> None:
 
                 if verbose:
                     console.print(f"[dim]Generated {len(failure_analyses)} failure analyses[/dim]")
+                    # Show LLM responses for each analysis
+                    # The parser used 1 call; remaining log entries are from the analyzer
+                    analyzer_responses = llm_client.response_log[1:]  # Skip parser response
+                    for i, resp in enumerate(analyzer_responses):
+                        label = failure_analyses[i].test_name if i < len(failure_analyses) else f"Analysis {i+1}"
+                        console.print(f"\n[bold]LLM Analysis — {label}:[/bold]")
+                        console.print(Panel(resp, border_style="dim", expand=False))
             except Exception as e:
                 progress.update(task, completed=True)
                 console.print(f"[yellow]Warning: Failure analysis failed:[/yellow] {e}")

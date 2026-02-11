@@ -24,6 +24,7 @@ class OllamaClient(LLMClient):
             model: Model name to use
             timeout: Request timeout in seconds
         """
+        super().__init__()
         # Allow environment variable override
         self.base_url = os.environ.get("OLLAMA_HOST", base_url).rstrip("/")
         self.model = model

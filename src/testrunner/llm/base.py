@@ -22,6 +22,10 @@ class LLMResponse:
 class LLMClient(ABC):
     """Abstract base class for LLM clients."""
 
+    def __init__(self):
+        self.last_raw_content: str = ""
+        self.response_log: list[str] = []
+
     @abstractmethod
     def generate(
         self,
@@ -76,7 +80,11 @@ class LLMClient(ABC):
         )
 
         if not response.success:
+            self.last_raw_content = ""
             return None
+
+        self.last_raw_content = response.content
+        self.response_log.append(response.content)
 
         # Try to extract JSON from the response
         content = response.content.strip()
