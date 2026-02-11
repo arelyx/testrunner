@@ -198,6 +198,9 @@ def run_testrunner(repo_path: Path, config: dict) -> dict:
         parser = LLMOutputParser(llm_client)
         analyzer = FailureAnalyzer(llm_client)
 
+        # Load hints file if available
+        hints_content = tr_config.get_hints_content(repo_path)
+
         # Collect git changes
         git_changes = None
         if tr_config.git.enabled:
@@ -221,6 +224,7 @@ def run_testrunner(repo_path: Path, config: dict) -> dict:
             exit_code=raw_output.exit_code,
             test_command=tr_config.test.command,
             language=tr_config.project.language,
+            hints=hints_content,
         )
 
         # Store results
@@ -256,7 +260,7 @@ def run_testrunner(repo_path: Path, config: dict) -> dict:
         if parsed.failed > 0:
             try:
                 failed_tests = [t for t in parsed.tests if t.status == TestStatus.FAILED]
-                failure_analyses = analyzer.analyze_multiple(failed_tests, git_changes)
+                failure_analyses = analyzer.analyze_multiple(failed_tests, git_changes, hints_content)
             except Exception:
                 pass
 

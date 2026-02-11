@@ -143,6 +143,11 @@ def run(ctx: click.Context, report: bool) -> None:
     parser = LLMOutputParser(llm_client)
     analyzer = FailureAnalyzer(llm_client)
 
+    # Load hints file if available
+    hints_content = config.get_hints_content(base_dir)
+    if hints_content and verbose:
+        console.print(f"[dim]Loaded hints from {config.hints_file}[/dim]")
+
     # Collect git changes if enabled
     git_changes = None
     if config.git.enabled:
@@ -199,6 +204,7 @@ def run(ctx: click.Context, report: bool) -> None:
                 exit_code=raw_output.exit_code,
                 test_command=config.test.command,
                 language=config.project.language,
+                hints=hints_content,
             )
             progress.update(task, completed=True)
 
@@ -251,7 +257,7 @@ def run(ctx: click.Context, report: bool) -> None:
             task = progress.add_task(f"Analyzing {parsed.failed} failures...", total=None)
             try:
                 failed_tests = [t for t in parsed.tests if t.status == TestStatus.FAILED]
-                failure_analyses = analyzer.analyze_multiple(failed_tests, git_changes)
+                failure_analyses = analyzer.analyze_multiple(failed_tests, git_changes, hints_content)
                 progress.update(task, completed=True)
 
                 if verbose:
