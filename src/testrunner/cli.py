@@ -96,6 +96,12 @@ def run(ctx: click.Context, report: bool) -> None:
     config_path = ctx.obj.get("config_path")
     verbose = ctx.obj.get("verbose", False)
 
+    # Load .env file from project directory
+    from dotenv import load_dotenv
+
+    env_dir = Path(config_path).parent if config_path else Path.cwd()
+    load_dotenv(env_dir / ".env")
+
     # Load configuration
     try:
         if config_path:
@@ -127,7 +133,7 @@ def run(ctx: click.Context, report: bool) -> None:
         from testrunner.llm.openrouter import OpenRouterClient
 
         llm_client = OpenRouterClient(
-            api_key=config.llm.resolve_api_key(base_dir),
+            api_key=config.llm.resolve_api_key(),
             model=config.llm.model,
             base_url=config.llm.base_url,
             timeout=config.llm.timeout_seconds,
