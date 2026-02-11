@@ -113,7 +113,6 @@ def run(ctx: click.Context, report: bool) -> None:
     from testrunner.llm.parser import LLMOutputParser
     from testrunner.llm.analyzer import FailureAnalyzer
     from testrunner.llm.ollama import OllamaClient
-    from testrunner.storage.database import Database
     from testrunner.report.generator import ReportGenerator
     from testrunner.storage.models import TestStatus
 
@@ -123,10 +122,8 @@ def run(ctx: click.Context, report: bool) -> None:
 
     # Ensure directories exist
     paths["report_output_dir"].mkdir(parents=True, exist_ok=True)
-    paths["database_path"].parent.mkdir(parents=True, exist_ok=True)
 
-    # Initialize database and LLM client
-    db = Database(paths["database_path"])
+    # Initialize LLM client
     llm_client = OllamaClient(
         base_url=config.llm.base_url,
         model=config.llm.model,
@@ -220,26 +217,8 @@ def run(ctx: click.Context, report: bool) -> None:
             console.print(f"[red]Error parsing test output:[/red] {e}")
             sys.exit(1)
 
-    # Create test run and store results
-    commit_hash = git_changes.get("current_commit") if git_changes else None
-    branch = git_changes.get("current_branch") if git_changes else None
-    test_run = db.create_run(commit_hash=commit_hash, branch=branch)
-
-    # Store individual test results
-    for test_result in parsed.tests:
-        test_result.run_id = test_run.id
-        db.add_result(test_result)
-
-    # Update run statistics
-    test_run.total_tests = parsed.total
-    test_run.passed = parsed.passed
-    test_run.failed = parsed.failed
-    test_run.skipped = parsed.skipped
-    db.finish_run(test_run)
-
     # Display results summary
     results_dict = {
-        "run_id": test_run.id,
         "total": parsed.total,
         "passed": parsed.passed,
         "failed": parsed.failed,
@@ -295,114 +274,6 @@ def run(ctx: click.Context, report: bool) -> None:
     # Exit with appropriate code
     if parsed.failed > 0:
         sys.exit(1)
-
-
-@main.command()
-@click.option(
-    "--run-id",
-    type=int,
-    help="Generate report for a specific run ID (default: latest)",
-)
-@click.pass_context
-def report(ctx: click.Context, run_id: Optional[int]) -> None:
-    """Generate or regenerate a test report."""
-    print_banner()
-
-    config_path = ctx.obj.get("config_path")
-
-    # Load configuration
-    try:
-        if config_path:
-            config = TestRunnerConfig.from_file(config_path)
-        else:
-            config = TestRunnerConfig.find_and_load()
-    except FileNotFoundError as e:
-        console.print(f"[red]Error:[/red] {e}")
-        sys.exit(1)
-
-    from testrunner.storage.database import Database
-    from testrunner.report.generator import ReportGenerator
-
-    base_dir = Path(config_path).parent if config_path else Path.cwd()
-    paths = config.get_absolute_paths(base_dir)
-
-    # Initialize database
-    db = Database(paths["database_path"])
-
-    # Get results
-    if run_id:
-        results = db.get_run_results(run_id)
-    else:
-        results = db.get_latest_run_results()
-
-    if not results:
-        console.print("[yellow]No test results found[/yellow]")
-        console.print("Run [bold]testrunner run[/bold] first to execute tests")
-        sys.exit(1)
-
-    # Generate report
-    try:
-        report_gen = ReportGenerator(config, base_dir)
-        report_path = report_gen.generate(results)
-        console.print(f"[green]Report generated:[/green] {report_path}")
-    except Exception as e:
-        console.print(f"[red]Error generating report:[/red] {e}")
-        sys.exit(1)
-
-
-@main.command()
-@click.option("--limit", "-n", type=int, default=10, help="Number of runs to show")
-@click.pass_context
-def history(ctx: click.Context, limit: int) -> None:
-    """Show test run history."""
-    print_banner()
-
-    config_path = ctx.obj.get("config_path")
-
-    try:
-        if config_path:
-            config = TestRunnerConfig.from_file(config_path)
-        else:
-            config = TestRunnerConfig.find_and_load()
-    except FileNotFoundError as e:
-        console.print(f"[red]Error:[/red] {e}")
-        sys.exit(1)
-
-    from testrunner.storage.database import Database
-
-    base_dir = Path(config_path).parent if config_path else Path.cwd()
-    paths = config.get_absolute_paths(base_dir)
-
-    db = Database(paths["database_path"])
-    runs = db.get_recent_runs(limit)
-
-    if not runs:
-        console.print("[yellow]No test runs found[/yellow]")
-        return
-
-    table = Table(title="Test Run History")
-    table.add_column("ID", style="cyan")
-    table.add_column("Date", style="dim")
-    table.add_column("Branch")
-    table.add_column("Commit", style="dim")
-    table.add_column("Total", justify="right")
-    table.add_column("Passed", justify="right", style="green")
-    table.add_column("Failed", justify="right", style="red")
-    table.add_column("Skipped", justify="right", style="yellow")
-
-    for run in runs:
-        table.add_row(
-            str(run.id),
-            run.started_at.strftime("%Y-%m-%d %H:%M") if run.started_at else "-",
-            run.branch or "-",
-            run.commit_hash[:8] if run.commit_hash else "-",
-            str(run.total_tests),
-            str(run.passed),
-            str(run.failed),
-            str(run.skipped),
-        )
-
-    console.print(table)
 
 
 def _display_results_summary(results: dict) -> None:

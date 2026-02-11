@@ -110,69 +110,6 @@ class TestResult:
 
 
 @dataclass
-class TestHistory:
-    """Historical statistics for a test."""
-
-    test_name: str = ""
-    last_failed_at: Optional[datetime] = None
-    failure_count: int = 0
-    total_runs: int = 0
-    avg_duration_ms: float = 0.0
-
-    @property
-    def failure_rate(self) -> float:
-        """Calculate the failure rate."""
-        if self.total_runs == 0:
-            return 0.0
-        return self.failure_count / self.total_runs
-
-    def to_dict(self) -> dict:
-        """Convert to dictionary."""
-        return {
-            "test_name": self.test_name,
-            "last_failed_at": self.last_failed_at.isoformat() if self.last_failed_at else None,
-            "failure_count": self.failure_count,
-            "total_runs": self.total_runs,
-            "failure_rate": self.failure_rate,
-            "avg_duration_ms": self.avg_duration_ms,
-        }
-
-    @classmethod
-    def from_row(cls, row: tuple) -> "TestHistory":
-        """Create from database row."""
-        return cls(
-            test_name=row[0],
-            last_failed_at=datetime.fromisoformat(row[1]) if row[1] else None,
-            failure_count=row[2] or 0,
-            total_runs=row[3] or 0,
-            avg_duration_ms=row[4] if len(row) > 4 else 0.0,
-        )
-
-
-@dataclass
-class RiskAnalysis:
-    """Risk analysis results for a test."""
-
-    test_name: str
-    risk_score: float
-    risk_factors: list[str] = field(default_factory=list)
-    affected_by_changes: bool = False
-    historical_failure_rate: float = 0.0
-    llm_confidence: float = 0.0
-
-    def to_dict(self) -> dict:
-        """Convert to dictionary."""
-        return {
-            "test_name": self.test_name,
-            "risk_score": self.risk_score,
-            "risk_factors": self.risk_factors,
-            "affected_by_changes": self.affected_by_changes,
-            "historical_failure_rate": self.historical_failure_rate,
-            "llm_confidence": self.llm_confidence,
-        }
-
-
-@dataclass
 class RootCauseAnalysis:
     """Root cause analysis for failing tests."""
 
