@@ -11,6 +11,12 @@
       "url": "git@github.com:arelyx/fixture-python-api.git",
       "description": "Flask API with intentional duplicate email validation bug",
       "expected_failures": 1
+    },
+    {
+      "name": "fixture-javascript-calculator",
+      "url": "git@github.com:arelyx/fixture-javascript-calculator.git",
+      "description": "JavaScript calculator with intentional divide-by-zero bug",
+      "expected_failures": 1
     }
   ],
   "test_repos_dir": "test_repos",
