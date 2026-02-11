@@ -64,6 +64,19 @@ class TestLLMConfig:
         config = LLMConfig(provider="OLLAMA")
         assert config.provider == "ollama"
 
+    def test_openrouter_provider(self):
+        """Test that openrouter is accepted as a provider."""
+        config = LLMConfig(provider="openrouter", model="meta-llama/llama-3.3-70b-instruct:free")
+        assert config.provider == "openrouter"
+
+    def test_api_key_env_field(self):
+        """Test api_key_env field defaults to None."""
+        config = LLMConfig()
+        assert config.api_key_env is None
+
+        config = LLMConfig(api_key_env="MY_KEY")
+        assert config.api_key_env == "MY_KEY"
+
 
 class TestTestRunnerConfig:
     """Tests for TestRunnerConfig."""

@@ -159,7 +159,6 @@ def run_testrunner(repo_path: Path, config: dict) -> dict:
         from testrunner.core.executor import TestExecutor
         from testrunner.llm.parser import LLMOutputParser
         from testrunner.llm.analyzer import FailureAnalyzer
-        from testrunner.llm.ollama import OllamaClient
         from testrunner.storage.models import TestStatus
         from testrunner.report.generator import ReportGenerator
 
@@ -179,12 +178,28 @@ def run_testrunner(repo_path: Path, config: dict) -> dict:
         paths = tr_config.get_absolute_paths(repo_path)
         paths["report_output_dir"].mkdir(parents=True, exist_ok=True)
 
-        # Initialize components
-        llm_client = OllamaClient(
-            base_url=tr_config.llm.base_url,
-            model=tr_config.llm.model,
-            timeout=tr_config.llm.timeout_seconds,
-        )
+        # Initialize LLM client based on provider
+        if tr_config.llm.provider == "openrouter":
+            import os
+            from testrunner.llm.openrouter import OpenRouterClient
+
+            api_key = None
+            if tr_config.llm.api_key_env:
+                api_key = os.environ.get(tr_config.llm.api_key_env)
+            llm_client = OpenRouterClient(
+                api_key=api_key,
+                model=tr_config.llm.model,
+                base_url=tr_config.llm.base_url,
+                timeout=tr_config.llm.timeout_seconds,
+            )
+        else:
+            from testrunner.llm.ollama import OllamaClient
+
+            llm_client = OllamaClient(
+                base_url=tr_config.llm.base_url,
+                model=tr_config.llm.model,
+                timeout=tr_config.llm.timeout_seconds,
+            )
 
         executor = TestExecutor(
             command=tr_config.test.command,

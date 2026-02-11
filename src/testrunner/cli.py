@@ -109,10 +109,11 @@ def run(ctx: click.Context, report: bool) -> None:
         sys.exit(1)
 
     # Import new components
+    import os
+
     from testrunner.core.executor import TestExecutor
     from testrunner.llm.parser import LLMOutputParser
     from testrunner.llm.analyzer import FailureAnalyzer
-    from testrunner.llm.ollama import OllamaClient
     from testrunner.report.generator import ReportGenerator
     from testrunner.storage.models import TestStatus
 
@@ -123,12 +124,27 @@ def run(ctx: click.Context, report: bool) -> None:
     # Ensure directories exist
     paths["report_output_dir"].mkdir(parents=True, exist_ok=True)
 
-    # Initialize LLM client
-    llm_client = OllamaClient(
-        base_url=config.llm.base_url,
-        model=config.llm.model,
-        timeout=config.llm.timeout_seconds,
-    )
+    # Initialize LLM client based on provider
+    if config.llm.provider == "openrouter":
+        from testrunner.llm.openrouter import OpenRouterClient
+
+        api_key = None
+        if config.llm.api_key_env:
+            api_key = os.environ.get(config.llm.api_key_env)
+        llm_client = OpenRouterClient(
+            api_key=api_key,
+            model=config.llm.model,
+            base_url=config.llm.base_url,
+            timeout=config.llm.timeout_seconds,
+        )
+    else:
+        from testrunner.llm.ollama import OllamaClient
+
+        llm_client = OllamaClient(
+            base_url=config.llm.base_url,
+            model=config.llm.model,
+            timeout=config.llm.timeout_seconds,
+        )
 
     # Initialize new components
     executor = TestExecutor(
