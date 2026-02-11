@@ -38,8 +38,9 @@
     }
   ],
   "test_repos_dir": "test_repos",
-  "ollama": {
-    "base_url": "http://insight:11434",
-    "model": "glm-4.7-flash:latest"
+  "llm": {
+    "provider": "openrouter",
+    "model": "openrouter/aurora-alpha",
+    "base_url": "https://openrouter.ai/api/v1"
   }
 }
