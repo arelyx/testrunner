@@ -178,12 +178,16 @@ def run_testrunner(repo_path: Path, config: dict) -> dict:
         paths = tr_config.get_absolute_paths(repo_path)
         paths["report_output_dir"].mkdir(parents=True, exist_ok=True)
 
+        # Load .env from repo directory
+        from dotenv import load_dotenv
+        load_dotenv(repo_path / ".env")
+
         # Initialize LLM client based on provider
         if tr_config.llm.provider == "openrouter":
             from testrunner.llm.openrouter import OpenRouterClient
 
             llm_client = OpenRouterClient(
-                api_key=tr_config.llm.resolve_api_key(repo_path),
+                api_key=tr_config.llm.resolve_api_key(),
                 model=tr_config.llm.model,
                 base_url=tr_config.llm.base_url,
                 timeout=tr_config.llm.timeout_seconds,

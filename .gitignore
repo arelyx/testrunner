@@ -73,9 +73,6 @@ Thumbs.db
 .env
 .env.local
 
-# Secret files (API keys, tokens)
-*.secret
-
 # Test repositories (potential submodules)
 test_repos/
 

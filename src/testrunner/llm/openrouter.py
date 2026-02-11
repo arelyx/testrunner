@@ -24,8 +24,8 @@ class OpenRouterClient(LLMClient):
         self.api_key = api_key or os.environ.get("OPENROUTER_API_KEY", "")
         if not self.api_key:
             raise ValueError(
-                "OpenRouter API key required. Set OPENROUTER_API_KEY environment "
-                "variable, use api_key_file in config, or pass api_key parameter."
+                "OpenRouter API key required. Set OPENROUTER_API_KEY in your "
+                ".env file or as an environment variable."
             )
         self.model = model
         self.base_url = base_url.rstrip("/")
