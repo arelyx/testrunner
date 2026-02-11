@@ -17,6 +17,24 @@
       "url": "git@github.com:arelyx/fixture-javascript-calculator.git",
       "description": "JavaScript calculator with intentional divide-by-zero bug",
       "expected_failures": 1
+    },
+    {
+      "name": "fixture-go-calculator",
+      "url": "git@github.com:arelyx/fixture-go-calculator.git",
+      "description": "Go calculator with intentional divide-by-zero bug",
+      "expected_failures": 1
+    },
+    {
+      "name": "fixture-rust-calculator",
+      "url": "git@github.com:arelyx/fixture-rust-calculator.git",
+      "description": "Rust calculator with intentional divide-by-zero bug",
+      "expected_failures": 1
+    },
+    {
+      "name": "fixture-java-calculator",
+      "url": "git@github.com:arelyx/fixture-java-calculator.git",
+      "description": "Java calculator with intentional divide-by-zero bug",
+      "expected_failures": 1
     }
   ],
   "test_repos_dir": "test_repos",
