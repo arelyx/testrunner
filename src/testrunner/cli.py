@@ -168,6 +168,8 @@ def run(ctx: click.Context, report: bool) -> None:
                 progress.update(task, completed=True)
                 if verbose and git_changes:
                     console.print(f"[dim]Found {len(git_changes.get('files', []))} changed files[/dim]")
+                if git_changes and config.git.ignore_untracked:
+                    git_changes.pop("untracked_files", None)
             except Exception as e:
                 progress.update(task, completed=True)
                 console.print(f"[yellow]Warning: Git analysis failed:[/yellow] {e}")

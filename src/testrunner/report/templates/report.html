@@ -151,6 +151,25 @@
 </div>
 {% endif %}
 
+<!-- Untracked Files -->
+{% if untracked_files %}
+<div class="section collapsible">
+    <h2 class="collapsible-header">
+        Untracked Files <span class="count">{{ untracked_files | length }}</span>
+        <span class="toggle-icon">▶</span>
+    </h2>
+    <div class="collapsible-content">
+        <div class="file-list">
+            {% for file in untracked_files %}
+            <span class="file-tag added">
+                {{ file.path }}
+            </span>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endif %}
+
 <!-- Passed Tests -->
 {% if passed_tests %}
 <div class="section collapsible">
