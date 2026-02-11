@@ -5,7 +5,7 @@ Test execution tool with LLM-based output parsing and failure analysis. Works wi
 ## Installation
 
 ```bash
-git clone https://github.com/your-org/testrunner.git
+git clone https://github.com/arelyx/testrunner.git
 cd testrunner
 python -m venv venv
 source venv/bin/activate  # Windows: venv\Scripts\activate
@@ -19,7 +19,7 @@ This installs testrunner in editable mode, making the `testrunner` command avail
 If you don't want to install, you can run it directly:
 
 ```bash
-python -m testrunner.cli run
+python -m testrunner run
 ```
 
 ## Requirements
@@ -50,6 +50,7 @@ Create `testrunner.json` in your project root:
     "base_url": "http://localhost:11434",
     "timeout_seconds": 120
   },
+  "hints_file": "HINTS.md",
   "report": {
     "output_dir": "./reports",
     "filename": "test_report.html"
@@ -112,6 +113,10 @@ Create `testrunner.json` in your project root:
 }
 ```
 
+### HINTS.md
+
+You can create a `HINTS.md` file in your project root to provide additional context to the LLM for better failure analysis. This file can include project architecture, known flaky tests, critical paths, and test dependencies. See `HINTS.md.example` for a template.
+
 ## Usage
 
 ```bash
@@ -123,19 +128,25 @@ View the generated report at `reports/test_report.html`.
 
 ## CLI Commands
 
+Global options (apply to all commands):
+
+- `--config, -c`: Path to config file (default: testrunner.json)
+- `--verbose, -v`: Verbose output
+
 ### run
+
 Execute tests and generate report.
 
 ```bash
-testrunner run [--config PATH] [--no-report] [--verbose]
+testrunner [--config PATH] [--verbose] run [--no-report]
 ```
 
 Options:
-- `--config, -c`: Path to config file (default: testrunner.json)
+
 - `--no-report`: Skip HTML report generation
-- `--verbose, -v`: Verbose output
 
 ### init
+
 Generate example configuration.
 
 ```bash
@@ -143,21 +154,24 @@ testrunner init [--output PATH] [--force]
 ```
 
 Options:
+
 - `--output, -o`: Output path (default: testrunner.json)
 - `--force, -f`: Overwrite existing file
 
 ### report
+
 Generate report from previous run.
 
 ```bash
-testrunner report [--run-id ID]
+testrunner [--config PATH] report [--run-id ID]
 ```
 
 ### history
+
 Show test run history.
 
 ```bash
-testrunner history [--limit N]
+testrunner [--config PATH] history [--limit N]
 ```
 
 ## Testing
@@ -172,10 +186,18 @@ pytest tests/ --cov=testrunner
 ### End-to-End Tests
 
 The `test_repos/` directory contains fixture projects for E2E testing:
-- `fixture-python-calculator/` - Python/pytest fixture with intentional test failure
-- `fixture-javascript-calculator/` - JavaScript/Jest fixture with intentional test failure
 
-Run E2E tests:
+- `fixture-python-calculator/` - Python/pytest fixture with intentional divide-by-zero failure
+- `fixture-python-api/` - Flask API with intentional duplicate email validation bug
+- `fixture-javascript-calculator/` - JavaScript/Jest fixture with intentional divide-by-zero failure
+
+Run the automated E2E test suite:
+
+```bash
+python scripts/e2e_test.py
+```
+
+Or run fixtures individually:
 
 ```bash
 # Python fixture
@@ -191,10 +213,11 @@ testrunner run
 If not installed with `pip install -e .`, use:
 
 ```bash
-python -m testrunner.cli run
+python -m testrunner run
 ```
 
 These fixtures test:
+
 - Test execution across different languages
 - LLM-based output parsing
 - Failure analysis with git context
