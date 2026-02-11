@@ -1,0 +1,39 @@
+PASS src/utils/calculator.test.js
+  Calculator
+    ✓ adds two numbers correctly (3 ms)
+    ✓ subtracts two numbers correctly (1 ms)
+    ✓ multiplies two numbers correctly (2 ms)
+    ✓ divides two numbers correctly (1 ms)
+
+FAIL src/api/users.test.js
+  User API
+    ✓ GET /api/users returns list (45 ms)
+    ✕ POST /api/users creates user (23 ms)
+    ✓ GET /api/users/:id returns user (12 ms)
+    ○ skipped DELETE /api/users/:id requires mock
+
+  ● User API › POST /api/users creates user
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: 201
+    Received: 500
+
+      at Object.<anonymous> (src/api/users.test.js:28:32)
+
+FAIL src/auth/login.test.js
+  Authentication
+    ✓ login with valid credentials (67 ms)
+    ✕ login with invalid password (15 ms)
+
+  ● Authentication › login with invalid password
+
+    TypeError: Cannot read property 'token' of undefined
+
+      at Object.<anonymous> (src/auth/login.test.js:45:23)
+
+Test Suites: 2 failed, 1 passed, 3 total
+Tests:       2 failed, 1 skipped, 7 passed, 10 total
+Snapshots:   0 total
+Time:        2.341 s
+Ran all test suites.

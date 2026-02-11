@@ -1,0 +1,21 @@
+{
+  "repos": [
+    {
+      "name": "fixture-python-calculator",
+      "url": "git@github.com:arelyx/fixture-python-calculator.git",
+      "description": "Calculator module with intentional divide-by-zero bug",
+      "expected_failures": 1
+    },
+    {
+      "name": "fixture-python-api",
+      "url": "git@github.com:arelyx/fixture-python-api.git",
+      "description": "Flask API with intentional duplicate email validation bug",
+      "expected_failures": 1
+    }
+  ],
+  "test_repos_dir": "test_repos",
+  "ollama": {
+    "base_url": "http://insight:11434",
+    "model": "glm-4.7-flash:latest"
+  }
+}

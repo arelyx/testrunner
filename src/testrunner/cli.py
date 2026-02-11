@@ -84,23 +84,13 @@ def init(ctx: click.Context, output: str, force: bool) -> None:
 
 @main.command()
 @click.option(
-    "--priority-only",
-    is_flag=True,
-    help="Only run high-priority tests",
-)
-@click.option(
-    "--skip-llm",
-    is_flag=True,
-    help="Skip LLM analysis (use historical data only)",
-)
-@click.option(
     "--report/--no-report",
     default=True,
     help="Generate HTML report after tests",
 )
 @click.pass_context
-def run(ctx: click.Context, priority_only: bool, skip_llm: bool, report: bool) -> None:
-    """Execute tests with intelligent prioritization."""
+def run(ctx: click.Context, report: bool) -> None:
+    """Execute tests and analyze failures."""
     print_banner()
 
     config_path = ctx.obj.get("config_path")
@@ -118,10 +108,14 @@ def run(ctx: click.Context, priority_only: bool, skip_llm: bool, report: bool) -
         console.print("Run [bold]testrunner init[/bold] to create a configuration file")
         sys.exit(1)
 
-    # Import here to avoid circular imports and allow lazy loading
-    from testrunner.core.runner import TestRunner
+    # Import new components
+    from testrunner.core.executor import TestExecutor
+    from testrunner.llm.parser import LLMOutputParser
+    from testrunner.llm.analyzer import FailureAnalyzer
+    from testrunner.llm.ollama import OllamaClient
     from testrunner.storage.database import Database
     from testrunner.report.generator import ReportGenerator
+    from testrunner.storage.models import TestStatus
 
     # Initialize components
     base_dir = Path(config_path).parent if config_path else Path.cwd()
@@ -131,65 +125,157 @@ def run(ctx: click.Context, priority_only: bool, skip_llm: bool, report: bool) -
     paths["report_output_dir"].mkdir(parents=True, exist_ok=True)
     paths["database_path"].parent.mkdir(parents=True, exist_ok=True)
 
-    # Initialize database
+    # Initialize database and LLM client
     db = Database(paths["database_path"])
+    llm_client = OllamaClient(
+        base_url=config.llm.base_url,
+        model=config.llm.model,
+        timeout=config.llm.timeout_seconds,
+    )
 
-    # Run tests
-    runner = TestRunner(config, db, base_dir, verbose=verbose)
+    # Initialize new components
+    executor = TestExecutor(
+        command=config.test.command,
+        working_directory=paths["working_directory"],
+        timeout_seconds=config.test.timeout_seconds,
+        environment=config.test.environment,
+    )
+    parser = LLMOutputParser(llm_client)
+    analyzer = FailureAnalyzer(llm_client)
 
+    # Collect git changes if enabled
+    git_changes = None
+    if config.git.enabled:
+        with Progress(
+            SpinnerColumn(),
+            TextColumn("[progress.description]{task.description}"),
+            console=console,
+        ) as progress:
+            task = progress.add_task("Analyzing git changes...", total=None)
+            try:
+                from testrunner.git.diff import GitDiffAnalyzer
+
+                git_analyzer = GitDiffAnalyzer(base_dir)
+                git_changes = git_analyzer.analyze(
+                    compare_ref=config.git.compare_ref,
+                    include_uncommitted=config.git.include_uncommitted,
+                )
+                progress.update(task, completed=True)
+                if verbose and git_changes:
+                    console.print(f"[dim]Found {len(git_changes.get('files', []))} changed files[/dim]")
+            except Exception as e:
+                progress.update(task, completed=True)
+                console.print(f"[yellow]Warning: Git analysis failed:[/yellow] {e}")
+
+    # Execute tests
     with Progress(
         SpinnerColumn(),
         TextColumn("[progress.description]{task.description}"),
         console=console,
     ) as progress:
-        # Phase 1: Git analysis (if enabled)
-        if config.git.enabled:
-            task = progress.add_task("Analyzing git changes...", total=None)
-            try:
-                changes = runner.analyze_git_changes()
-                progress.update(task, completed=True)
-                if verbose and changes:
-                    console.print(f"[dim]Found {len(changes.get('files', []))} changed files[/dim]")
-            except Exception as e:
-                progress.update(task, completed=True)
-                console.print(f"[yellow]Warning: Git analysis failed:[/yellow] {e}")
-
-        # Phase 2: LLM risk analysis (if not skipped)
-        if not skip_llm:
-            task = progress.add_task("Analyzing test risks with LLM...", total=None)
-            try:
-                runner.analyze_risks()
-                progress.update(task, completed=True)
-            except Exception as e:
-                progress.update(task, completed=True)
-                console.print(f"[yellow]Warning: LLM analysis failed:[/yellow] {e}")
-                console.print("[dim]Continuing with historical data only[/dim]")
-
-        # Phase 3: Execute tests
         task = progress.add_task("Running tests...", total=None)
         try:
-            results = runner.execute_tests(priority_only=priority_only)
+            raw_output = executor.execute()
             progress.update(task, completed=True)
+
+            if verbose:
+                console.print(f"[dim]Test execution completed in {raw_output.duration_ms}ms[/dim]")
         except Exception as e:
             progress.update(task, completed=True)
-            console.print(f"[red]Error running tests:[/red] {e}")
+            console.print(f"[red]Error executing tests:[/red] {e}")
             sys.exit(1)
 
+    # Parse test output
+    with Progress(
+        SpinnerColumn(),
+        TextColumn("[progress.description]{task.description}"),
+        console=console,
+    ) as progress:
+        task = progress.add_task("Parsing test results...", total=None)
+        try:
+            parsed = parser.parse(
+                stdout=raw_output.stdout,
+                stderr=raw_output.stderr,
+                exit_code=raw_output.exit_code,
+                test_command=config.test.command,
+                language=config.project.language,
+            )
+            progress.update(task, completed=True)
+
+            if verbose:
+                console.print(f"[dim]Parsed {len(parsed.tests)} tests (confidence: {parsed.parse_confidence:.0%})[/dim]")
+        except Exception as e:
+            progress.update(task, completed=True)
+            console.print(f"[red]Error parsing test output:[/red] {e}")
+            sys.exit(1)
+
+    # Create test run and store results
+    commit_hash = git_changes.get("current_commit") if git_changes else None
+    branch = git_changes.get("current_branch") if git_changes else None
+    test_run = db.create_run(commit_hash=commit_hash, branch=branch)
+
+    # Store individual test results
+    for test_result in parsed.tests:
+        test_result.run_id = test_run.id
+        db.add_result(test_result)
+
+    # Update run statistics
+    test_run.total_tests = parsed.total
+    test_run.passed = parsed.passed
+    test_run.failed = parsed.failed
+    test_run.skipped = parsed.skipped
+    db.finish_run(test_run)
+
     # Display results summary
-    _display_results_summary(results)
+    results_dict = {
+        "run_id": test_run.id,
+        "total": parsed.total,
+        "passed": parsed.passed,
+        "failed": parsed.failed,
+        "skipped": parsed.skipped,
+        "duration_ms": parsed.duration_ms,
+        "results": [t.to_dict() for t in parsed.tests],
+        "failed_tests": [t.to_dict() for t in parsed.tests if t.status == TestStatus.FAILED],
+        "raw_output": parsed.raw_output,
+    }
+    _display_results_summary(results_dict)
+
+    # Analyze failures
+    failure_analyses = []
+    if parsed.failed > 0:
+        with Progress(
+            SpinnerColumn(),
+            TextColumn("[progress.description]{task.description}"),
+            console=console,
+        ) as progress:
+            task = progress.add_task(f"Analyzing {parsed.failed} failures...", total=None)
+            try:
+                failed_tests = [t for t in parsed.tests if t.status == TestStatus.FAILED]
+                failure_analyses = analyzer.analyze_multiple(failed_tests, git_changes)
+                progress.update(task, completed=True)
+
+                if verbose:
+                    console.print(f"[dim]Generated {len(failure_analyses)} failure analyses[/dim]")
+            except Exception as e:
+                progress.update(task, completed=True)
+                console.print(f"[yellow]Warning: Failure analysis failed:[/yellow] {e}")
 
     # Generate report
     if report:
         console.print("\n[bold]Generating report...[/bold]")
         try:
             report_gen = ReportGenerator(config, base_dir)
-            report_path = report_gen.generate(results, runner.get_analysis_data())
+            analysis_data = {
+                "git_changes": git_changes,
+                "failure_analyses": [a.to_dict() for a in failure_analyses],
+            }
+            report_path = report_gen.generate(results_dict, analysis_data)
             console.print(f"[green]Report generated:[/green] {report_path}")
         except Exception as e:
             console.print(f"[red]Error generating report:[/red] {e}")
 
     # Exit with appropriate code
-    if results.get("failed", 0) > 0:
+    if parsed.failed > 0:
         sys.exit(1)
 
 

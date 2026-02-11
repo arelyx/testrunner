@@ -23,7 +23,7 @@ class TestProjectConfig:
         """Test default values are set correctly."""
         config = ProjectConfig(name="test")
         assert config.name == "test"
-        assert config.language == "python"
+        assert config.language is None  # Now optional
         assert config.description == ""
 
 
@@ -33,11 +33,10 @@ class TestTestConfig:
     def test_default_values(self):
         """Test default values are set correctly."""
         config = TestConfig()
-        assert config.command == "pytest"
-        assert config.args == []
-        assert config.test_directory == "tests/"
+        assert config.command == "pytest -v"  # Now includes args in command string
+        assert config.working_directory == "."  # Renamed from test_directory
         assert config.timeout_seconds == 300
-        assert config.fail_fast is False
+        assert config.environment == {}  # New field
 
     def test_timeout_validation(self):
         """Test that timeout must be positive."""
@@ -72,15 +71,15 @@ class TestTestRunnerConfig:
     def test_default_config(self):
         """Test creating a default configuration."""
         config = get_default_config()
-        assert config.project.language == "python"
-        assert config.test.command == "pytest"
+        assert config.project.language is None  # Now optional
+        assert "pytest" in config.test.command  # Command includes args now
         assert config.llm.provider == "ollama"
 
     def test_from_file(self):
         """Test loading configuration from a file."""
         config_data = {
             "project": {"name": "test-project", "language": "python"},
-            "test": {"command": "pytest", "args": ["-v"]},
+            "test": {"command": "pytest -v"},  # Single command string now
             "llm": {"provider": "ollama", "model": "llama3.2"},
         }
 
@@ -92,7 +91,7 @@ class TestTestRunnerConfig:
 
             config = TestRunnerConfig.from_file(f.name)
             assert config.project.name == "test-project"
-            assert config.test.args == ["-v"]
+            assert config.test.command == "pytest -v"  # Check command string
 
     def test_from_file_not_found(self):
         """Test loading from non-existent file raises error."""
@@ -131,15 +130,15 @@ class TestTestRunnerConfig:
     def test_get_absolute_paths(self):
         """Test getting absolute paths from config."""
         config = get_default_config()
-        config.test.test_directory = "tests/"
+        config.test.working_directory = "."  # Changed from test_directory
         config.report.output_dir = "./reports"
 
         with tempfile.TemporaryDirectory() as tmpdir:
             base_dir = Path(tmpdir)
             paths = config.get_absolute_paths(base_dir)
 
-            assert paths["test_directory"].is_absolute()
-            assert str(paths["test_directory"]).endswith("tests")
+            assert paths["working_directory"].is_absolute()  # Changed key name
+            assert paths["working_directory"] == base_dir.resolve()  # Should be the tmpdir itself
 
     def test_get_hints_content(self):
         """Test reading hints file content."""

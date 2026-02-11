@@ -1,0 +1,22 @@
+=== RUN   TestAdd
+--- PASS: TestAdd (0.00s)
+=== RUN   TestSubtract
+--- PASS: TestSubtract (0.00s)
+=== RUN   TestMultiply
+--- PASS: TestMultiply (0.00s)
+=== RUN   TestDivide
+--- PASS: TestDivide (0.00s)
+=== RUN   TestDivideByZero
+    calculator_test.go:42: Expected error but got none
+--- FAIL: TestDivideByZero (0.00s)
+=== RUN   TestValidateInput
+--- PASS: TestValidateInput (0.00s)
+=== RUN   TestHandleRequest
+    handler_test.go:67: POST /api/calculate returned status 500, want 200
+--- FAIL: TestHandleRequest (0.01s)
+=== RUN   TestParseQuery
+--- SKIP: TestParseQuery (0.00s)
+    parser_test.go:23: skipping test in short mode
+FAIL
+FAIL    github.com/example/calculator    0.234s
+FAIL

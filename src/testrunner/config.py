@@ -12,24 +12,30 @@ class ProjectConfig(BaseModel):
     """Project identification and metadata."""
 
     name: str = Field(description="Project name for identification")
-    language: str = Field(default="python", description="Primary programming language")
+    language: Optional[str] = Field(default=None, description="Programming language hint for LLM (optional)")
     description: str = Field(default="", description="Brief description for LLM context")
 
 
 class TestConfig(BaseModel):
     """Test execution configuration."""
 
-    command: str = Field(default="pytest", description="Test command to execute")
-    args: list[str] = Field(default_factory=list, description="Arguments for test command")
-    test_directory: str = Field(default="tests/", description="Directory containing tests")
+    command: str = Field(default="pytest -v", description="Complete test command to execute (e.g., 'pytest -v', 'npm test')")
+    working_directory: str = Field(default=".", description="Directory to run command in")
     timeout_seconds: int = Field(default=300, description="Test execution timeout")
-    fail_fast: bool = Field(default=False, description="Stop on first failure")
+    environment: dict[str, str] = Field(default_factory=dict, description="Additional environment variables")
 
     @field_validator("timeout_seconds")
     @classmethod
     def validate_timeout(cls, v: int) -> int:
         if v < 1:
             raise ValueError("Timeout must be at least 1 second")
+        return v
+
+    @field_validator("command")
+    @classmethod
+    def validate_command(cls, v: str) -> str:
+        if not v.strip():
+            raise ValueError("Test command cannot be empty")
         return v
 
 
@@ -156,7 +162,7 @@ class TestRunnerConfig(BaseModel):
             base_dir = Path(base_dir)
 
         return {
-            "test_directory": (base_dir / self.test.test_directory).resolve(),
+            "working_directory": (base_dir / self.test.working_directory).resolve(),
             "hints_file": (base_dir / self.hints_file).resolve(),
             "report_output_dir": (base_dir / self.report.output_dir).resolve(),
             "database_path": (base_dir / self.storage.database_path).resolve(),
@@ -166,8 +172,8 @@ class TestRunnerConfig(BaseModel):
 def get_default_config() -> TestRunnerConfig:
     """Return a default configuration."""
     return TestRunnerConfig(
-        project=ProjectConfig(name="my-project", language="python"),
-        test=TestConfig(command="pytest", args=["-v", "--tb=short"]),
+        project=ProjectConfig(name="my-project", language=None),
+        test=TestConfig(command="pytest -v --tb=short", working_directory="."),
         llm=LLMConfig(provider="ollama", model="llama3.2"),
     )
 
