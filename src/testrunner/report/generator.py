@@ -98,25 +98,17 @@ class ReportGenerator:
         passed_tests = [r for r in all_results if r.get("status") == "passed"]
         skipped_tests = [r for r in all_results if r.get("status") == "skipped"]
 
-        # Sort by risk score if available
+        # Sort by duration (slowest first) for performance insights
         for tests in [failed_tests, passed_tests, skipped_tests]:
-            tests.sort(key=lambda t: t.get("risk_score", 0), reverse=True)
-
-        # Prepare risk analysis data
-        risk_scores = analysis_data.get("risk_scores", {})
-        high_risk_tests = [
-            {"name": name, "score": score}
-            for name, score in sorted(risk_scores.items(), key=lambda x: x[1], reverse=True)
-            if score >= 0.6
-        ]
+            tests.sort(key=lambda t: t.get("duration_ms", 0), reverse=True)
 
         # Prepare git changes
         git_changes = analysis_data.get("git_changes", {})
         changed_files = git_changes.get("files", [])
         recent_commits = git_changes.get("commits", [])
 
-        # Prepare root cause analysis
-        root_cause_analysis = analysis_data.get("root_cause_analysis", [])
+        # Prepare failure analysis (LLM-generated root cause analysis)
+        failure_analyses = analysis_data.get("failure_analyses", [])
 
         return {
             "title": self.config.report.title,
@@ -135,12 +127,10 @@ class ReportGenerator:
             "passed_tests": passed_tests,
             "skipped_tests": skipped_tests,
             "all_results": all_results,
-            # Analysis
-            "high_risk_tests": high_risk_tests,
-            "risk_scores": risk_scores,
+            # Analysis (LLM-powered failure analysis)
+            "failure_analyses": failure_analyses,
             "changed_files": changed_files[:20],  # Limit for display
             "recent_commits": recent_commits[:10],
-            "root_cause_analysis": root_cause_analysis,
             # Raw output
             "raw_output": results.get("raw_output", ""),
         }
