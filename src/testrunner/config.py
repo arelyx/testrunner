@@ -41,17 +41,21 @@ class TestConfig(BaseModel):
 class LLMConfig(BaseModel):
     """LLM provider configuration."""
 
-    provider: str = Field(default="ollama", description="LLM provider (ollama)")
+    provider: str = Field(default="ollama", description="LLM provider (ollama, openrouter)")
     model: str = Field(default="llama3.2", description="Model name to use")
     base_url: str = Field(
         default="http://localhost:11434", description="LLM service base URL"
     )
     timeout_seconds: int = Field(default=120, description="LLM request timeout")
+    api_key_env: Optional[str] = Field(
+        default=None,
+        description="Environment variable name containing the API key (e.g. OPENROUTER_API_KEY)",
+    )
 
     @field_validator("provider")
     @classmethod
     def validate_provider(cls, v: str) -> str:
-        allowed = {"ollama"}
+        allowed = {"ollama", "openrouter"}
         if v.lower() not in allowed:
             raise ValueError(f"Provider must be one of: {allowed}")
         return v.lower()
