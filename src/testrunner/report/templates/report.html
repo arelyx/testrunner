@@ -2,108 +2,141 @@
 
 {% block content %}
 <header>
+    <span class="eyebrow">Test Report</span>
     <h1>{{ title }}</h1>
-    <p class="subtitle">{{ project_name }}</p>
-    <div class="meta-info">
-        <span>Generated: {{ generated_at | datetime_format }}</span>
+    <div class="meta-row">
+        <div class="meta-item">
+            <span class="label">Project</span>
+            <span>{{ project_name }}</span>
+        </div>
+        <div class="meta-item">
+            <span class="label">Generated</span>
+            <span>{{ generated_at | datetime_format }}</span>
+        </div>
         {% if run_info.branch %}
-        <span>Branch: {{ run_info.branch }}</span>
+        <div class="meta-item">
+            <span class="label">Branch</span>
+            <code>{{ run_info.branch }}</code>
+        </div>
         {% endif %}
         {% if run_info.commit_hash %}
-        <span>Commit: {{ run_info.commit_hash[:8] }}</span>
+        <div class="meta-item">
+            <span class="label">Commit</span>
+            <code>{{ run_info.commit_hash[:8] }}</code>
+        </div>
         {% endif %}
         {% if duration_ms %}
-        <span>Duration: {{ duration_ms | duration_format }}</span>
+        <div class="meta-item">
+            <span class="label">Duration</span>
+            <span>{{ duration_ms | duration_format }}</span>
+        </div>
         {% endif %}
     </div>
 </header>
 
-<!-- Summary Statistics -->
-<div class="stats-grid">
-    <div class="stat-card total">
-        <span class="value">{{ total }}</span>
-        <span class="label">Total Tests</span>
+<!-- Stats Grid -->
+<div class="stats">
+    <div class="stat total">
+        <span class="number">{{ total }}</span>
+        <span class="desc">Total</span>
     </div>
-    <div class="stat-card passed">
-        <span class="value">{{ passed }}</span>
-        <span class="label">Passed</span>
+    <div class="stat passed">
+        <span class="number">{{ passed }}</span>
+        <span class="desc">Passed</span>
     </div>
-    <div class="stat-card failed">
-        <span class="value">{{ failed }}</span>
-        <span class="label">Failed</span>
+    <div class="stat failed">
+        <span class="number">{{ failed }}</span>
+        <span class="desc">Failed</span>
     </div>
-    <div class="stat-card skipped">
-        <span class="value">{{ skipped }}</span>
-        <span class="label">Skipped</span>
+    <div class="stat skipped">
+        <span class="number">{{ skipped }}</span>
+        <span class="desc">Skipped</span>
     </div>
 </div>
 
-<!-- Pass Rate Progress -->
-<div class="section">
-    <h2>Pass Rate</h2>
-    <div style="font-size: 2rem; font-weight: bold; color: {% if pass_rate >= 80 %}var(--color-success){% elif pass_rate >= 50 %}var(--color-warning){% else %}var(--color-danger){% endif %};">
-        {{ "%.1f" | format(pass_rate) }}%
+<!-- Pass Rate -->
+<div class="pass-rate">
+    <div class="pass-rate-header">
+        <span class="label">Pass Rate</span>
+        <span class="value {% if pass_rate >= 80 %}good{% elif pass_rate >= 50 %}warn{% else %}bad{% endif %}">{{ "%.1f" | format(pass_rate) }}%</span>
     </div>
-    <div class="progress-bar">
-        <div class="progress-fill success" style="width: {{ pass_rate }}%;"></div>
+    <div class="bar-track">
+        <div class="bar-fill {% if pass_rate >= 80 %}good{% elif pass_rate >= 50 %}warn{% else %}bad{% endif %}" style="width: {{ pass_rate }}%;"></div>
     </div>
 </div>
 
 <!-- Failed Tests -->
 {% if failed_tests %}
 <div class="section">
-    <h2 style="color: var(--color-danger);">Failed Tests <span class="count">{{ failed_tests | length }}</span></h2>
-    <ul class="test-list">
-        {% for test in failed_tests %}
-        <li class="test-item">
-            <div class="test-header">
-                <span class="test-name">{{ test.test_name }}</span>
-                <div class="test-meta">
-                    {% if test.duration_ms %}
-                    <span class="test-duration">{{ test.duration_ms | duration_format }}</span>
-                    {% endif %}
-                    <span class="test-status failed">Failed</span>
-                    <span class="toggle-icon">▶</span>
-                </div>
-            </div>
-            <div class="test-details">
-                {% if test.error_message %}
-                <h4 style="margin-bottom: 10px; color: var(--color-danger);">Error Output</h4>
-                <pre class="error-output">{{ test.error_message }}</pre>
+    <h2 class="section-title" style="color: var(--red-text);">
+        Failed Tests
+        <span class="badge" style="background: var(--red-subtle); color: var(--red-text);">{{ failed_tests | length }}</span>
+    </h2>
+    {% for test in failed_tests %}
+    <div class="card">
+        <div class="card-header">
+            <span class="card-name">{{ test.test_name }}</span>
+            <div class="card-meta">
+                {% if test.duration_ms %}
+                <span class="card-duration">{{ test.duration_ms | duration_format }}</span>
                 {% endif %}
+                <span class="pill failed">Failed</span>
+                <span class="chevron">&#9654;</span>
             </div>
-        </li>
-        {% endfor %}
-    </ul>
+        </div>
+        <div class="card-body">
+            {% if test.error_message %}
+            <pre class="code-block error">{{ test.error_message }}</pre>
+            {% endif %}
+        </div>
+    </div>
+    {% endfor %}
 </div>
 {% endif %}
 
 <!-- Failure Analysis -->
 {% if failure_analyses %}
 <div class="section">
-    <h2>Failure Analysis</h2>
-    <p style="color: var(--color-text-secondary); margin-bottom: 15px;">
-        LLM-powered analysis of test failures with suspected causes and suggested fixes.
-    </p>
+    <h2 class="section-title">
+        Failure Analysis
+        <span class="badge">{{ failure_analyses | length }}</span>
+    </h2>
+    <p class="section-subtitle">Root cause analysis powered by LLM inference.</p>
     {% for analysis in failure_analyses %}
-    <div class="analysis-card">
+    <div class="analysis-item">
         <h4>{{ analysis.test_name }}</h4>
-        <p><strong>Likely Cause:</strong> {{ analysis.likely_cause }}</p>
+        <div class="analysis-field">
+            <span class="field-label">Likely Cause</span>
+            <span class="field-value">{{ analysis.likely_cause }}</span>
+        </div>
         {% if analysis.suspected_file %}
-        <p><strong>Suspected File:</strong> <code>{{ analysis.suspected_file }}</code></p>
+        <div class="analysis-field">
+            <span class="field-label">Suspected File</span>
+            <span class="field-value"><code>{{ analysis.suspected_file }}</code></span>
+        </div>
         {% endif %}
         {% if analysis.suspected_commit %}
-        <p><strong>Suspected Commit:</strong> <code>{{ analysis.suspected_commit }}</code></p>
+        <div class="analysis-field">
+            <span class="field-label">Suspected Commit</span>
+            <span class="field-value"><code>{{ analysis.suspected_commit }}</code></span>
+        </div>
         {% endif %}
         {% if analysis.explanation %}
-        <p style="margin-top: 10px; color: var(--color-text-secondary);">{{ analysis.explanation }}</p>
+        <div class="analysis-field">
+            <span class="field-label">Explanation</span>
+            <span class="field-value">{{ analysis.explanation }}</span>
+        </div>
         {% endif %}
         {% if analysis.suggested_fix %}
-        <p style="margin-top: 10px;"><strong>Suggested Fix:</strong> {{ analysis.suggested_fix }}</p>
+        <div class="analysis-field">
+            <span class="field-label">Suggested Fix</span>
+            <span class="field-value">{{ analysis.suggested_fix }}</span>
+        </div>
         {% endif %}
-        <p style="margin-top: 10px; color: var(--color-text-secondary);">
-            Confidence: {{ "%.0f" | format(analysis.confidence * 100) }}%
-        </p>
+        <div class="analysis-field">
+            <span class="field-label">Confidence</span>
+            <span class="confidence">{{ "%.0f" | format(analysis.confidence * 100) }}%</span>
+        </div>
     </div>
     {% endfor %}
 </div>
@@ -112,22 +145,19 @@
 <!-- Recent Commits -->
 {% if recent_commits %}
 <div class="section collapsible">
-    <h2 class="collapsible-header">
-        Recent Commits <span class="count">{{ recent_commits | length }}</span>
-        <span class="toggle-icon">▶</span>
+    <h2 class="section-title">
+        Recent Commits
+        <span class="badge">{{ recent_commits | length }}</span>
+        <span class="chevron">&#9654;</span>
     </h2>
-    <div class="collapsible-content">
-        <ul class="commit-list">
-            {% for commit in recent_commits %}
-            <li class="commit-item">
-                <span class="commit-hash">{{ commit.short_hash }}</span>
-                <div class="commit-message">
-                    <div>{{ commit.message | truncate(100) }}</div>
-                    <div class="commit-author">{{ commit.author }} - {{ commit.date | datetime_format }}</div>
-                </div>
-            </li>
-            {% endfor %}
-        </ul>
+    <div class="collapsible-body">
+        {% for commit in recent_commits %}
+        <div class="commit-row">
+            <span class="commit-sha">{{ commit.short_hash }}</span>
+            <span class="commit-msg">{{ commit.message | truncate(100) }}</span>
+            <span class="commit-info">{{ commit.author }}</span>
+        </div>
+        {% endfor %}
     </div>
 </div>
 {% endif %}
@@ -135,12 +165,13 @@
 <!-- Changed Files -->
 {% if changed_files %}
 <div class="section collapsible">
-    <h2 class="collapsible-header">
-        Changed Files <span class="count">{{ changed_files | length }}</span>
-        <span class="toggle-icon">▶</span>
+    <h2 class="section-title">
+        Changed Files
+        <span class="badge">{{ changed_files | length }}</span>
+        <span class="chevron">&#9654;</span>
     </h2>
-    <div class="collapsible-content">
-        <div class="file-list">
+    <div class="collapsible-body">
+        <div class="file-grid">
             {% for file in changed_files %}
             <span class="file-tag {% if file.change_type == 'A' %}added{% elif file.change_type == 'M' %}modified{% elif file.change_type == 'D' %}deleted{% endif %}">
                 {{ file.path }}
@@ -154,16 +185,15 @@
 <!-- Untracked Files -->
 {% if untracked_files %}
 <div class="section collapsible">
-    <h2 class="collapsible-header">
-        Untracked Files <span class="count">{{ untracked_files | length }}</span>
-        <span class="toggle-icon">▶</span>
+    <h2 class="section-title">
+        Untracked Files
+        <span class="badge">{{ untracked_files | length }}</span>
+        <span class="chevron">&#9654;</span>
     </h2>
-    <div class="collapsible-content">
-        <div class="file-list">
+    <div class="collapsible-body">
+        <div class="file-grid">
             {% for file in untracked_files %}
-            <span class="file-tag added">
-                {{ file.path }}
-            </span>
+            <span class="file-tag untracked">{{ file.path }}</span>
             {% endfor %}
         </div>
     </div>
@@ -173,26 +203,25 @@
 <!-- Passed Tests -->
 {% if passed_tests %}
 <div class="section collapsible">
-    <h2 class="collapsible-header">
-        Passed Tests <span class="count">{{ passed_tests | length }}</span>
-        <span class="toggle-icon">▶</span>
+    <h2 class="section-title">
+        Passed Tests
+        <span class="badge" style="background: var(--green-subtle); color: var(--green-text);">{{ passed_tests | length }}</span>
+        <span class="chevron">&#9654;</span>
     </h2>
-    <div class="collapsible-content">
-        <ul class="test-list">
-            {% for test in passed_tests %}
-            <li class="test-item">
-                <div class="test-header">
-                    <span class="test-name">{{ test.test_name }}</span>
-                    <div class="test-meta">
-                        {% if test.duration_ms %}
-                        <span class="test-duration">{{ test.duration_ms | duration_format }}</span>
-                        {% endif %}
-                        <span class="test-status passed">Passed</span>
-                    </div>
+    <div class="collapsible-body">
+        {% for test in passed_tests %}
+        <div class="card">
+            <div class="card-header" style="cursor: default;">
+                <span class="card-name">{{ test.test_name }}</span>
+                <div class="card-meta">
+                    {% if test.duration_ms %}
+                    <span class="card-duration">{{ test.duration_ms | duration_format }}</span>
+                    {% endif %}
+                    <span class="pill passed">Passed</span>
                 </div>
-            </li>
-            {% endfor %}
-        </ul>
+            </div>
+        </div>
+        {% endfor %}
     </div>
 </div>
 {% endif %}
@@ -200,23 +229,22 @@
 <!-- Skipped Tests -->
 {% if skipped_tests %}
 <div class="section collapsible">
-    <h2 class="collapsible-header">
-        Skipped Tests <span class="count">{{ skipped_tests | length }}</span>
-        <span class="toggle-icon">▶</span>
+    <h2 class="section-title">
+        Skipped Tests
+        <span class="badge" style="background: var(--amber-subtle); color: var(--amber-text);">{{ skipped_tests | length }}</span>
+        <span class="chevron">&#9654;</span>
     </h2>
-    <div class="collapsible-content">
-        <ul class="test-list">
-            {% for test in skipped_tests %}
-            <li class="test-item">
-                <div class="test-header">
-                    <span class="test-name">{{ test.test_name }}</span>
-                    <div class="test-meta">
-                        <span class="test-status skipped">Skipped</span>
-                    </div>
+    <div class="collapsible-body">
+        {% for test in skipped_tests %}
+        <div class="card">
+            <div class="card-header" style="cursor: default;">
+                <span class="card-name">{{ test.test_name }}</span>
+                <div class="card-meta">
+                    <span class="pill skipped">Skipped</span>
                 </div>
-            </li>
-            {% endfor %}
-        </ul>
+            </div>
+        </div>
+        {% endfor %}
     </div>
 </div>
 {% endif %}
@@ -224,18 +252,18 @@
 <!-- Raw Output -->
 {% if raw_output %}
 <div class="section collapsible">
-    <h2 class="collapsible-header">
+    <h2 class="section-title">
         Raw Test Output
-        <span class="toggle-icon">▶</span>
+        <span class="chevron">&#9654;</span>
     </h2>
-    <div class="collapsible-content">
-        <pre class="raw-output">{{ raw_output }}</pre>
+    <div class="collapsible-body">
+        <pre class="code-block">{{ raw_output }}</pre>
     </div>
 </div>
 {% endif %}
 
 <footer>
-    <p>Generated by TestRunner v{{ "0.1.0" }}</p>
+    <p><span class="brand">TestRunner</span> v{{ "0.1.0" }}</p>
     <p>Language-agnostic test execution with LLM-powered failure analysis</p>
 </footer>
 {% endblock %}
