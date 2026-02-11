@@ -1,6 +1,5 @@
-"""Storage layer for test history and results."""
+"""Storage layer for test results."""
 
-from testrunner.storage.database import Database
-from testrunner.storage.models import TestRun, TestResult, TestHistory
+from testrunner.storage.models import TestRun, TestResult, TestStatus, RootCauseAnalysis
 
-__all__ = ["Database", "TestRun", "TestResult", "TestHistory"]
+__all__ = ["TestRun", "TestResult", "TestStatus", "RootCauseAnalysis"]

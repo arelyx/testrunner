@@ -160,7 +160,6 @@ def run_testrunner(repo_path: Path, config: dict) -> dict:
         from testrunner.llm.parser import LLMOutputParser
         from testrunner.llm.analyzer import FailureAnalyzer
         from testrunner.llm.ollama import OllamaClient
-        from testrunner.storage.database import Database
         from testrunner.storage.models import TestStatus
         from testrunner.report.generator import ReportGenerator
 
@@ -179,10 +178,8 @@ def run_testrunner(repo_path: Path, config: dict) -> dict:
         # Setup paths
         paths = tr_config.get_absolute_paths(repo_path)
         paths["report_output_dir"].mkdir(parents=True, exist_ok=True)
-        paths["database_path"].parent.mkdir(parents=True, exist_ok=True)
 
         # Initialize components
-        db = Database(paths["database_path"])
         llm_client = OllamaClient(
             base_url=tr_config.llm.base_url,
             model=tr_config.llm.model,
@@ -227,24 +224,8 @@ def run_testrunner(repo_path: Path, config: dict) -> dict:
             hints=hints_content,
         )
 
-        # Store results
-        commit_hash = git_changes.get("current_commit") if git_changes else None
-        branch = git_changes.get("current_branch") if git_changes else None
-        test_run = db.create_run(commit_hash=commit_hash, branch=branch)
-
-        for test_result in parsed.tests:
-            test_result.run_id = test_run.id
-            db.add_result(test_result)
-
-        test_run.total_tests = parsed.total
-        test_run.passed = parsed.passed
-        test_run.failed = parsed.failed
-        test_run.skipped = parsed.skipped
-        db.finish_run(test_run)
-
         # Build results dict
         results_dict = {
-            "run_id": test_run.id,
             "total": parsed.total,
             "passed": parsed.passed,
             "failed": parsed.failed,

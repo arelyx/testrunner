@@ -7,9 +7,7 @@ import pytest
 from testrunner.storage.models import (
     TestRun,
     TestResult,
-    TestHistory,
     TestStatus,
-    RiskAnalysis,
     RootCauseAnalysis,
 )
 
@@ -101,54 +99,6 @@ class TestTestResult:
         assert d["test_name"] == "test_example"
         assert d["status"] == "failed"
         assert d["duration_ms"] == 100
-
-
-class TestTestHistory:
-    """Tests for TestHistory model."""
-
-    def test_failure_rate_no_runs(self):
-        """Test failure rate with no runs."""
-        history = TestHistory(test_name="test_example")
-        assert history.failure_rate == 0.0
-
-    def test_failure_rate_calculation(self):
-        """Test failure rate calculation."""
-        history = TestHistory(
-            test_name="test_example",
-            failure_count=3,
-            total_runs=10,
-        )
-        assert history.failure_rate == 0.3
-
-    def test_to_dict(self):
-        """Test converting to dictionary."""
-        history = TestHistory(
-            test_name="test_example",
-            failure_count=2,
-            total_runs=5,
-        )
-
-        d = history.to_dict()
-        assert d["test_name"] == "test_example"
-        assert d["failure_rate"] == 0.4
-
-
-class TestRiskAnalysis:
-    """Tests for RiskAnalysis model."""
-
-    def test_to_dict(self):
-        """Test converting to dictionary."""
-        analysis = RiskAnalysis(
-            test_name="test_example",
-            risk_score=0.8,
-            risk_factors=["Recent changes", "Historical failures"],
-            affected_by_changes=True,
-        )
-
-        d = analysis.to_dict()
-        assert d["test_name"] == "test_example"
-        assert d["risk_score"] == 0.8
-        assert len(d["risk_factors"]) == 2
 
 
 class TestRootCauseAnalysis:

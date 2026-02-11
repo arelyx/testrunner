@@ -1,7 +1,6 @@
 """Configuration management for TestRunner."""
 
 import json
-import os
 from pathlib import Path
 from typing import Optional
 
@@ -75,14 +74,6 @@ class GitConfig(BaseModel):
     ignore_untracked: bool = Field(default=False, description="Exclude untracked files from reports")
 
 
-class StorageConfig(BaseModel):
-    """Storage configuration for test history."""
-
-    database_path: str = Field(
-        default=".testrunner/history.db", description="SQLite database path"
-    )
-
-
 class TestRunnerConfig(BaseModel):
     """Main configuration for TestRunner."""
 
@@ -92,7 +83,6 @@ class TestRunnerConfig(BaseModel):
     hints_file: str = Field(default="HINTS.md", description="Path to hints file")
     report: ReportConfig = Field(default_factory=ReportConfig)
     git: GitConfig = Field(default_factory=GitConfig)
-    storage: StorageConfig = Field(default_factory=StorageConfig)
 
     @classmethod
     def from_file(cls, path: Path | str) -> "TestRunnerConfig":
@@ -166,7 +156,6 @@ class TestRunnerConfig(BaseModel):
             "working_directory": (base_dir / self.test.working_directory).resolve(),
             "hints_file": (base_dir / self.hints_file).resolve(),
             "report_output_dir": (base_dir / self.report.output_dir).resolve(),
-            "database_path": (base_dir / self.storage.database_path).resolve(),
         }
 
 
