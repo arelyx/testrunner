@@ -66,12 +66,14 @@ Return ONLY valid JSON matching the schema provided."""
         self,
         test_result: TestResult,
         git_changes: Optional[dict] = None,
+        hints: Optional[str] = None,
     ) -> Optional[FailureAnalysis]:
         """Analyze a test failure to identify root cause.
 
         Args:
             test_result: The failed test result
             git_changes: Optional git changes context from GitDiffAnalyzer
+            hints: Optional project context from HINTS.md
 
         Returns:
             FailureAnalysis if successful, None if LLM unavailable or error
@@ -83,7 +85,7 @@ Return ONLY valid JSON matching the schema provided."""
             # No error message to analyze
             return None
 
-        prompt = self._build_analysis_prompt(test_result, git_changes)
+        prompt = self._build_analysis_prompt(test_result, git_changes, hints)
 
         try:
             response = self.client.generate_json(
@@ -104,12 +106,14 @@ Return ONLY valid JSON matching the schema provided."""
         self,
         test_results: list[TestResult],
         git_changes: Optional[dict] = None,
+        hints: Optional[str] = None,
     ) -> list[FailureAnalysis]:
         """Analyze multiple test failures.
 
         Args:
             test_results: List of failed test results
             git_changes: Optional git changes context
+            hints: Optional project context from HINTS.md
 
         Returns:
             List of FailureAnalysis objects (may be empty if errors occur)
@@ -117,7 +121,7 @@ Return ONLY valid JSON matching the schema provided."""
         analyses = []
 
         for test_result in test_results:
-            analysis = self.analyze(test_result, git_changes)
+            analysis = self.analyze(test_result, git_changes, hints)
             if analysis:
                 analyses.append(analysis)
 
@@ -127,12 +131,14 @@ Return ONLY valid JSON matching the schema provided."""
         self,
         test_result: TestResult,
         git_changes: Optional[dict],
+        hints: Optional[str] = None,
     ) -> str:
         """Build analysis prompt for LLM.
 
         Args:
             test_result: Failed test result
             git_changes: Git changes context
+            hints: Optional project context from HINTS.md
 
         Returns:
             Formatted prompt string
@@ -150,6 +156,14 @@ Return ONLY valid JSON matching the schema provided."""
             "```",
             "",
         ]
+
+        # Add project hints if available
+        if hints:
+            prompt_parts.extend([
+                "## Project Hints",
+                hints[:5000],  # Limit hints length
+                "",
+            ])
 
         # Add git context if available
         if git_changes:

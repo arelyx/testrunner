@@ -76,6 +76,7 @@ Return ONLY valid JSON matching the exact schema provided."""
         exit_code: int,
         test_command: Optional[str] = None,
         language: Optional[str] = None,
+        hints: Optional[str] = None,
     ) -> ParsedTestOutput:
         """Parse raw test output into structured results.
 
@@ -85,6 +86,7 @@ Return ONLY valid JSON matching the exact schema provided."""
             exit_code: Exit code from test command
             test_command: The command that was run (helps LLM understand framework)
             language: Optional language hint (e.g., "python", "javascript")
+            hints: Optional project context from HINTS.md
 
         Returns:
             ParsedTestOutput with structured test results
@@ -99,6 +101,7 @@ Return ONLY valid JSON matching the exact schema provided."""
             exit_code=exit_code,
             test_command=test_command,
             language=language,
+            hints=hints,
         )
 
         # Get LLM response
@@ -125,6 +128,7 @@ Return ONLY valid JSON matching the exact schema provided."""
         exit_code: int,
         test_command: Optional[str],
         language: Optional[str],
+        hints: Optional[str] = None,
     ) -> str:
         """Build the parsing prompt for the LLM.
 
@@ -134,6 +138,7 @@ Return ONLY valid JSON matching the exact schema provided."""
             exit_code: Exit code
             test_command: Test command executed
             language: Language hint
+            hints: Optional project context from HINTS.md
 
         Returns:
             Formatted prompt string
@@ -158,6 +163,14 @@ Return ONLY valid JSON matching the exact schema provided."""
             prompt_parts.append(f"- Test command: `{test_command}`")
         if language:
             prompt_parts.append(f"- Language/Framework: {language}")
+
+        if hints:
+            prompt_parts.extend([
+                "",
+                "## Project Hints",
+                hints[:5000],  # Limit hints length
+                "",
+            ])
 
         prompt_parts.extend([
             f"- Exit code: {exit_code}",
