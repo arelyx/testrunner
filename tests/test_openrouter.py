@@ -37,10 +37,10 @@ class TestOpenRouterClient:
             assert client.api_key == "param-key"
 
     def test_default_model(self):
-        """Test default model is a free Llama model."""
+        """Test default model is aurora-alpha."""
         with patch.dict("os.environ", {"OPENROUTER_API_KEY": "key"}):
             client = OpenRouterClient()
-            assert ":free" in client.model
+            assert client.model == "openrouter/aurora-alpha"
 
     def test_headers(self, client):
         """Test authorization headers."""
@@ -153,6 +153,56 @@ class TestOpenRouterClient:
             mock_client.return_value.__exit__ = MagicMock(return_value=False)
 
             assert client.is_available() is False
+
+    def test_generate_reasoning_model_fallback(self, client):
+        """Test that reasoning field is used when content is empty."""
+        mock_response = {
+            "choices": [
+                {"message": {"content": "", "reasoning": "The answer is 42."}}
+            ],
+            "model": "test/model:free",
+            "usage": {
+                "prompt_tokens": 10,
+                "completion_tokens": 20,
+            },
+        }
+
+        mock_http = MagicMock()
+        mock_http.json.return_value = mock_response
+        mock_http.raise_for_status = MagicMock()
+
+        with patch("httpx.Client") as mock_client:
+            mock_client.return_value.__enter__ = MagicMock(return_value=MagicMock(
+                post=MagicMock(return_value=mock_http)
+            ))
+            mock_client.return_value.__exit__ = MagicMock(return_value=False)
+
+            response = client.generate("test prompt")
+
+            assert response.content == "The answer is 42."
+
+    def test_generate_content_preferred_over_reasoning(self, client):
+        """Test that content is preferred when both content and reasoning are present."""
+        mock_response = {
+            "choices": [
+                {"message": {"content": "Final answer", "reasoning": "Some reasoning"}}
+            ],
+            "model": "test/model:free",
+        }
+
+        mock_http = MagicMock()
+        mock_http.json.return_value = mock_response
+        mock_http.raise_for_status = MagicMock()
+
+        with patch("httpx.Client") as mock_client:
+            mock_client.return_value.__enter__ = MagicMock(return_value=MagicMock(
+                post=MagicMock(return_value=mock_http)
+            ))
+            mock_client.return_value.__exit__ = MagicMock(return_value=False)
+
+            response = client.generate("test prompt")
+
+            assert response.content == "Final answer"
 
     def test_generate_json_integration(self, client):
         """Test generate_json works through the base class."""
