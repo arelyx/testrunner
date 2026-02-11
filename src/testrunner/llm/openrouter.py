@@ -16,7 +16,7 @@ class OpenRouterClient(LLMClient):
     def __init__(
         self,
         api_key: Optional[str] = None,
-        model: str = "qwen/qwen3-coder:free",
+        model: str = "openrouter/aurora-alpha",
         base_url: str = DEFAULT_BASE_URL,
         timeout: int = 120,
     ):
@@ -69,7 +69,14 @@ class OpenRouterClient(LLMClient):
                 data = response.json()
 
                 choice = data.get("choices", [{}])[0]
-                content = choice.get("message", {}).get("content", "")
+                message = choice.get("message", {})
+                content = message.get("content", "")
+
+                # Reasoning models may return output in the reasoning field
+                # instead of content — fall back to reasoning if content is empty
+                if not content and message.get("reasoning"):
+                    content = message["reasoning"]
+
                 usage = data.get("usage")
 
                 return LLMResponse(
