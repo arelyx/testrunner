@@ -1,0 +1,38 @@
+============================= test session starts ==============================
+platform darwin -- Python 3.10.4, pytest-9.0.2, pluggy-1.6.0
+rootdir: /Users/test/project
+collected 10 items
+
+tests/test_calculator.py::test_add PASSED                                [  10%]
+tests/test_calculator.py::test_subtract PASSED                           [  20%]
+tests/test_calculator.py::test_multiply PASSED                           [  30%]
+tests/test_calculator.py::test_divide PASSED                             [  40%]
+tests/test_calculator.py::test_divide_by_zero FAILED                     [  50%]
+tests/test_calculator.py::test_power PASSED                              [  60%]
+tests/test_api.py::test_health_check PASSED                              [  70%]
+tests/test_api.py::test_create_user FAILED                               [  80%]
+tests/test_api.py::test_get_user PASSED                                  [  90%]
+tests/test_api.py::test_delete_user SKIPPED (requires database)          [ 100%]
+
+=================================== FAILURES ===================================
+____________________________ test_divide_by_zero _____________________________
+
+    def test_divide_by_zero():
+        calc = Calculator()
+>       result = calc.divide(10, 0)
+E       ZeroDivisionError: division by zero
+
+tests/test_calculator.py:25: ZeroDivisionError
+________________________________ test_create_user _______________________________
+
+    def test_create_user():
+        response = client.post('/api/users', json={'name': 'John'})
+>       assert response.status_code == 201
+E       AssertionError: assert 500 == 201
+E        +  where 500 = <Response [500]>.status_code
+
+tests/test_api.py:15: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_calculator.py::test_divide_by_zero - ZeroDivisionError: division by zero
+FAILED tests/test_api.py::test_create_user - AssertionError: assert 500 == 201
+========================= 7 passed, 2 failed, 1 skipped in 0.84s ===============

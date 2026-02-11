@@ -5,18 +5,16 @@
     "description": "Brief description of your project for LLM context"
   },
   "test": {
-    "command": "pytest",
-    "args": ["-v", "--tb=short"],
-    "test_directory": "tests/",
+    "command": "pytest -v --tb=short",
+    "working_directory": ".",
     "timeout_seconds": 300,
-    "fail_fast": false
+    "environment": {}
   },
   "llm": {
     "provider": "ollama",
     "model": "llama3.2",
     "base_url": "http://localhost:11434",
-    "timeout_seconds": 120,
-    "_comment": "Point base_url to your running Ollama instance (e.g., http://localhost:11434 or http://your-server:11434)"
+    "timeout_seconds": 120
   },
   "hints_file": "HINTS.md",
   "report": {
@@ -31,5 +29,13 @@
   },
   "storage": {
     "database_path": ".testrunner/history.db"
+  },
+  "_comment": "Example commands for different languages:",
+  "_examples": {
+    "python": "pytest -v --tb=short",
+    "javascript": "npm test",
+    "go": "go test -v ./...",
+    "java": "mvn test",
+    "rust": "cargo test"
   }
 }
