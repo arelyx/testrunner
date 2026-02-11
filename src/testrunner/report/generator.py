@@ -105,6 +105,7 @@ class ReportGenerator:
         # Prepare git changes
         git_changes = analysis_data.get("git_changes", {})
         changed_files = git_changes.get("files", [])
+        untracked_files = git_changes.get("untracked_files", [])
         recent_commits = git_changes.get("commits", [])
 
         # Prepare failure analysis (LLM-generated root cause analysis)
@@ -130,6 +131,7 @@ class ReportGenerator:
             # Analysis (LLM-powered failure analysis)
             "failure_analyses": failure_analyses,
             "changed_files": changed_files[:20],  # Limit for display
+            "untracked_files": untracked_files[:20],
             "recent_commits": recent_commits[:10],
             # Raw output
             "raw_output": results.get("raw_output", ""),

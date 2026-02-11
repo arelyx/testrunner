@@ -72,6 +72,7 @@ class GitConfig(BaseModel):
     enabled: bool = Field(default=True, description="Enable git analysis")
     compare_ref: str = Field(default="HEAD~5", description="Git ref to compare against")
     include_uncommitted: bool = Field(default=True, description="Include uncommitted changes")
+    ignore_untracked: bool = Field(default=False, description="Exclude untracked files from reports")
 
 
 class StorageConfig(BaseModel):

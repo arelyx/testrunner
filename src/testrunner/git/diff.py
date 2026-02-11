@@ -102,6 +102,7 @@ class GitDiffAnalyzer:
             "current_branch": self.get_current_branch(),
             "compare_ref": compare_ref,
             "files": [],
+            "untracked_files": [],
             "commits": [],
             "summary": {
                 "total_files_changed": 0,
@@ -120,12 +121,13 @@ class GitDiffAnalyzer:
 
         # Get uncommitted changes
         if include_uncommitted:
-            uncommitted_files = self._get_uncommitted_changes()
+            uncommitted_files, untracked_files = self._get_uncommitted_changes()
             # Merge with committed changes, avoiding duplicates
             existing_paths = {f["path"] for f in result["files"]}
             for f in uncommitted_files:
                 if f["path"] not in existing_paths:
                     result["files"].append(f)
+            result["untracked_files"] = untracked_files
 
         # Get recent commits
         try:
@@ -176,8 +178,12 @@ class GitDiffAnalyzer:
 
         return files
 
-    def _get_uncommitted_changes(self) -> list[dict]:
-        """Get uncommitted changes (staged and unstaged)."""
+    def _get_uncommitted_changes(self) -> tuple[list[dict], list[dict]]:
+        """Get uncommitted changes (staged and unstaged) and untracked files.
+
+        Returns:
+            Tuple of (changed_files, untracked_files)
+        """
         files = []
 
         # Staged changes
@@ -208,18 +214,19 @@ class GitDiffAnalyzer:
         except Exception:
             pass
 
-        # Untracked files
+        # Untracked files (separate from changed files)
+        untracked = []
         try:
             for path in self.repo.untracked_files:
                 changed_file = ChangedFile(
                     path=path,
-                    change_type="A",
+                    change_type="U",
                 )
-                files.append(changed_file.to_dict())
+                untracked.append(changed_file.to_dict())
         except Exception:
             pass
 
-        return files
+        return files, untracked
 
     def _get_recent_commits(self, compare_ref: str) -> list[dict]:
         """Get recent commits since compare_ref."""
