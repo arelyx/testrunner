@@ -4,351 +4,516 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}{{ title }}{% endblock %}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=JetBrains+Mono:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --color-bg: #1a1a2e;
-            --color-bg-secondary: #16213e;
-            --color-bg-card: #0f3460;
-            --color-text: #eaeaea;
-            --color-text-secondary: #a0a0a0;
-            --color-primary: #4f8cff;
-            --color-success: #10b981;
-            --color-danger: #ef4444;
-            --color-warning: #f59e0b;
-            --color-info: #3b82f6;
-            --border-radius: 8px;
-            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+            --bg-root: #0c0c0f;
+            --bg-surface: #141419;
+            --bg-elevated: #1c1c24;
+            --bg-hover: #24242e;
+            --border: #2a2a36;
+            --border-subtle: #1e1e28;
+            --text-primary: #e8e8ed;
+            --text-secondary: #8b8b9e;
+            --text-tertiary: #5c5c6e;
+            --accent: #6e56cf;
+            --accent-subtle: rgba(110, 86, 207, 0.12);
+            --green: #30a46c;
+            --green-subtle: rgba(48, 164, 108, 0.12);
+            --green-text: #3dd68c;
+            --red: #e5484d;
+            --red-subtle: rgba(229, 72, 77, 0.12);
+            --red-text: #ff6369;
+            --amber: #f5a623;
+            --amber-subtle: rgba(245, 166, 35, 0.12);
+            --amber-text: #ffcb47;
+            --blue: #3e63dd;
+            --blue-subtle: rgba(62, 99, 221, 0.12);
+            --mono: 'JetBrains Mono', 'SF Mono', 'Fira Code', monospace;
+            --sans: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+            --radius-sm: 6px;
+            --radius-md: 10px;
+            --radius-lg: 14px;
         }
 
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
-            background: var(--color-bg);
-            color: var(--color-text);
-            line-height: 1.6;
-            padding: 20px;
+            font-family: var(--sans);
+            background: var(--bg-root);
+            color: var(--text-primary);
+            line-height: 1.65;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
         }
 
         .container {
-            max-width: 1400px;
+            max-width: 960px;
             margin: 0 auto;
+            padding: 48px 24px 80px;
         }
 
+        /* ── Header ── */
         header {
-            text-align: center;
-            padding: 30px 0;
-            border-bottom: 1px solid var(--color-bg-card);
-            margin-bottom: 30px;
+            padding-bottom: 40px;
+            margin-bottom: 48px;
+            border-bottom: 1px solid var(--border);
+            position: relative;
         }
 
-        header h1 {
-            font-size: 2.5rem;
-            margin-bottom: 10px;
-            color: var(--color-primary);
+        header::after {
+            content: '';
+            position: absolute;
+            bottom: -1px;
+            left: 0;
+            width: 80px;
+            height: 2px;
+            background: var(--accent);
         }
 
-        header .subtitle {
-            color: var(--color-text-secondary);
-            font-size: 1.1rem;
-        }
-
-        .meta-info {
-            display: flex;
-            justify-content: center;
-            gap: 30px;
-            margin-top: 15px;
-            flex-wrap: wrap;
-        }
-
-        .meta-info span {
-            color: var(--color-text-secondary);
-            font-size: 0.9rem;
-        }
-
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 20px;
-            margin-bottom: 30px;
-        }
-
-        .stat-card {
-            background: var(--color-bg-card);
-            border-radius: var(--border-radius);
-            padding: 25px;
-            text-align: center;
-            box-shadow: var(--shadow);
-        }
-
-        .stat-card .value {
-            font-size: 3rem;
-            font-weight: bold;
+        header .eyebrow {
+            font-family: var(--mono);
+            font-size: 0.72rem;
+            font-weight: 500;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: var(--accent);
+            margin-bottom: 16px;
             display: block;
         }
 
-        .stat-card .label {
-            color: var(--color-text-secondary);
-            font-size: 0.95rem;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-
-        .stat-card.passed .value { color: var(--color-success); }
-        .stat-card.failed .value { color: var(--color-danger); }
-        .stat-card.skipped .value { color: var(--color-warning); }
-        .stat-card.total .value { color: var(--color-primary); }
-
-        .section {
-            background: var(--color-bg-secondary);
-            border-radius: var(--border-radius);
-            padding: 25px;
-            margin-bottom: 25px;
-            box-shadow: var(--shadow);
-        }
-
-        .section h2 {
+        header h1 {
+            font-family: var(--sans);
+            font-size: 2rem;
+            font-weight: 700;
+            letter-spacing: -0.03em;
+            line-height: 1.2;
+            color: var(--text-primary);
             margin-bottom: 20px;
-            padding-bottom: 10px;
-            border-bottom: 2px solid var(--color-bg-card);
+        }
+
+        .meta-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 24px;
+        }
+
+        .meta-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.82rem;
+            color: var(--text-secondary);
+        }
+
+        .meta-item .label {
+            color: var(--text-tertiary);
+        }
+
+        .meta-item code {
+            font-family: var(--mono);
+            font-size: 0.78rem;
+            background: var(--bg-elevated);
+            padding: 2px 8px;
+            border-radius: var(--radius-sm);
+            color: var(--text-primary);
+        }
+
+        /* ── Stats ── */
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1px;
+            background: var(--border-subtle);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            margin-bottom: 48px;
+        }
+
+        .stat {
+            background: var(--bg-surface);
+            padding: 28px 24px;
+            text-align: center;
+            position: relative;
+        }
+
+        .stat .number {
+            font-family: var(--mono);
+            font-size: 2.4rem;
+            font-weight: 600;
+            line-height: 1;
+            display: block;
+            margin-bottom: 8px;
+        }
+
+        .stat .desc {
+            font-size: 0.78rem;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--text-tertiary);
+        }
+
+        .stat.total .number { color: var(--text-primary); }
+        .stat.passed .number { color: var(--green-text); }
+        .stat.failed .number { color: var(--red-text); }
+        .stat.skipped .number { color: var(--amber-text); }
+
+        /* ── Pass Rate Bar ── */
+        .pass-rate {
+            margin-bottom: 48px;
+        }
+
+        .pass-rate-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            margin-bottom: 12px;
+        }
+
+        .pass-rate-header .label {
+            font-size: 0.82rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+        }
+
+        .pass-rate-header .value {
+            font-family: var(--mono);
+            font-size: 1.6rem;
+            font-weight: 600;
+        }
+
+        .pass-rate-header .value.good { color: var(--green-text); }
+        .pass-rate-header .value.warn { color: var(--amber-text); }
+        .pass-rate-header .value.bad { color: var(--red-text); }
+
+        .bar-track {
+            height: 6px;
+            background: var(--bg-elevated);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .bar-fill {
+            height: 100%;
+            border-radius: 3px;
+            transition: width 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .bar-fill.good { background: var(--green); }
+        .bar-fill.warn { background: var(--amber); }
+        .bar-fill.bad { background: var(--red); }
+
+        /* ── Section ── */
+        .section {
+            margin-bottom: 32px;
+        }
+
+        .section-title {
+            font-family: var(--sans);
+            font-size: 0.92rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 16px;
             display: flex;
             align-items: center;
             gap: 10px;
         }
 
-        .section h2 .count {
-            background: var(--color-bg-card);
-            padding: 3px 10px;
-            border-radius: 20px;
-            font-size: 0.9rem;
-            color: var(--color-text-secondary);
+        .section-title .badge {
+            font-family: var(--mono);
+            font-size: 0.72rem;
+            font-weight: 500;
+            padding: 2px 10px;
+            border-radius: 100px;
+            background: var(--bg-elevated);
+            color: var(--text-secondary);
         }
 
-        .test-list {
-            list-style: none;
+        .section-subtitle {
+            font-size: 0.82rem;
+            color: var(--text-tertiary);
+            margin-bottom: 16px;
         }
 
-        .test-item {
-            background: var(--color-bg-card);
-            border-radius: var(--border-radius);
-            margin-bottom: 10px;
+        /* ── Cards ── */
+        .card {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-md);
             overflow: hidden;
+            margin-bottom: 8px;
+            transition: border-color 0.15s;
         }
 
-        .test-header {
-            padding: 15px 20px;
+        .card:hover {
+            border-color: var(--border);
+        }
+
+        .card-header {
+            padding: 14px 18px;
             display: flex;
             justify-content: space-between;
             align-items: center;
             cursor: pointer;
-            transition: background 0.2s;
+            gap: 12px;
         }
 
-        .test-header:hover {
-            background: rgba(255, 255, 255, 0.05);
-        }
-
-        .test-name {
-            font-family: 'Monaco', 'Menlo', monospace;
-            font-size: 0.95rem;
+        .card-name {
+            font-family: var(--mono);
+            font-size: 0.82rem;
+            font-weight: 400;
+            color: var(--text-primary);
             word-break: break-all;
-        }
-
-        .test-meta {
-            display: flex;
-            gap: 15px;
-            align-items: center;
-        }
-
-        .test-duration {
-            color: var(--color-text-secondary);
-            font-size: 0.85rem;
-        }
-
-        .test-status {
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 0.8rem;
-            font-weight: 600;
-            text-transform: uppercase;
-        }
-
-        .test-status.passed { background: var(--color-success); color: white; }
-        .test-status.failed { background: var(--color-danger); color: white; }
-        .test-status.skipped { background: var(--color-warning); color: black; }
-
-        .risk-badge {
-            padding: 3px 8px;
-            border-radius: 4px;
-            font-size: 0.75rem;
-            font-weight: 600;
-        }
-
-        .risk-badge.high { background: var(--color-danger); color: white; }
-        .risk-badge.medium { background: var(--color-warning); color: black; }
-        .risk-badge.low { background: var(--color-bg); color: var(--color-text-secondary); }
-
-        .test-details {
-            display: none;
-            padding: 0 20px 20px;
-            border-top: 1px solid var(--color-bg);
-        }
-
-        .test-item.expanded .test-details {
-            display: block;
-        }
-
-        .error-output {
-            background: #1e1e1e;
-            border-radius: var(--border-radius);
-            padding: 15px;
-            font-family: 'Monaco', 'Menlo', monospace;
-            font-size: 0.85rem;
-            overflow-x: auto;
-            white-space: pre-wrap;
-            color: #ff6b6b;
-            max-height: 400px;
-            overflow-y: auto;
-        }
-
-        .analysis-card {
-            background: var(--color-bg-card);
-            border-radius: var(--border-radius);
-            padding: 20px;
-            margin-bottom: 15px;
-        }
-
-        .analysis-card h4 {
-            margin-bottom: 10px;
-            color: var(--color-primary);
-        }
-
-        .commit-list {
-            list-style: none;
-        }
-
-        .commit-item {
-            padding: 12px 15px;
-            background: var(--color-bg-card);
-            border-radius: var(--border-radius);
-            margin-bottom: 8px;
-            display: flex;
-            gap: 15px;
-            align-items: flex-start;
-        }
-
-        .commit-hash {
-            font-family: monospace;
-            background: var(--color-bg);
-            padding: 2px 8px;
-            border-radius: 4px;
-            font-size: 0.85rem;
-            color: var(--color-primary);
-        }
-
-        .commit-message {
             flex: 1;
         }
 
-        .commit-author {
-            color: var(--color-text-secondary);
-            font-size: 0.85rem;
-        }
-
-        .file-list {
+        .card-meta {
             display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
+            align-items: center;
+            gap: 10px;
+            flex-shrink: 0;
         }
 
-        .file-tag {
-            background: var(--color-bg-card);
-            padding: 5px 12px;
-            border-radius: 20px;
-            font-size: 0.85rem;
-            font-family: monospace;
+        .card-duration {
+            font-family: var(--mono);
+            font-size: 0.72rem;
+            color: var(--text-tertiary);
         }
 
-        .file-tag.added { border-left: 3px solid var(--color-success); }
-        .file-tag.modified { border-left: 3px solid var(--color-warning); }
-        .file-tag.deleted { border-left: 3px solid var(--color-danger); }
-
-        .progress-bar {
-            height: 8px;
-            background: var(--color-bg-card);
-            border-radius: 4px;
-            overflow: hidden;
-            margin-top: 10px;
+        .pill {
+            font-family: var(--mono);
+            font-size: 0.68rem;
+            font-weight: 600;
+            padding: 3px 10px;
+            border-radius: 100px;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
         }
 
-        .progress-fill {
-            height: 100%;
-            transition: width 0.3s;
-        }
+        .pill.passed { background: var(--green-subtle); color: var(--green-text); }
+        .pill.failed { background: var(--red-subtle); color: var(--red-text); }
+        .pill.skipped { background: var(--amber-subtle); color: var(--amber-text); }
 
-        .progress-fill.success { background: var(--color-success); }
-
-        .toggle-icon {
+        .chevron {
+            color: var(--text-tertiary);
+            font-size: 0.72rem;
             transition: transform 0.2s;
+            flex-shrink: 0;
         }
 
-        .test-item.expanded .toggle-icon {
+        .card.expanded .chevron {
             transform: rotate(90deg);
         }
 
-        .raw-output {
-            background: #1e1e1e;
-            border-radius: var(--border-radius);
-            padding: 15px;
-            font-family: monospace;
-            font-size: 0.85rem;
-            overflow-x: auto;
-            white-space: pre-wrap;
-            max-height: 500px;
-            overflow-y: auto;
-        }
-
-        .collapsible-header {
-            cursor: pointer;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .collapsible-content {
+        .card-body {
             display: none;
+            padding: 0 18px 18px;
         }
 
-        .collapsible.expanded .collapsible-content {
+        .card.expanded .card-body {
             display: block;
         }
 
-        footer {
-            text-align: center;
-            padding: 30px;
-            color: var(--color-text-secondary);
-            font-size: 0.9rem;
+        /* ── Code / Error Output ── */
+        .code-block {
+            background: var(--bg-root);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-sm);
+            padding: 16px;
+            font-family: var(--mono);
+            font-size: 0.78rem;
+            line-height: 1.7;
+            overflow-x: auto;
+            white-space: pre-wrap;
+            max-height: 400px;
+            overflow-y: auto;
+            color: var(--text-secondary);
         }
 
-        @media (max-width: 768px) {
-            .stats-grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
+        .code-block.error {
+            color: var(--red-text);
+            border-color: rgba(229, 72, 77, 0.15);
+        }
 
-            .test-header {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 10px;
-            }
+        /* ── Analysis Card ── */
+        .analysis-item {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-md);
+            padding: 20px;
+            margin-bottom: 12px;
+        }
 
-            .test-meta {
-                width: 100%;
-                justify-content: flex-start;
-            }
+        .analysis-item h4 {
+            font-family: var(--mono);
+            font-size: 0.82rem;
+            font-weight: 500;
+            color: var(--text-primary);
+            margin-bottom: 14px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--border-subtle);
+        }
+
+        .analysis-field {
+            display: grid;
+            grid-template-columns: 140px 1fr;
+            gap: 4px 16px;
+            font-size: 0.82rem;
+            margin-bottom: 8px;
+        }
+
+        .analysis-field .field-label {
+            color: var(--text-tertiary);
+            font-weight: 500;
+        }
+
+        .analysis-field .field-value {
+            color: var(--text-secondary);
+        }
+
+        .analysis-field .field-value code {
+            font-family: var(--mono);
+            font-size: 0.78rem;
+            background: var(--bg-elevated);
+            padding: 1px 6px;
+            border-radius: var(--radius-sm);
+            color: var(--text-primary);
+        }
+
+        .analysis-field .confidence {
+            font-family: var(--mono);
+            font-size: 0.72rem;
+            color: var(--accent);
+        }
+
+        /* ── Commit List ── */
+        .commit-row {
+            display: flex;
+            align-items: baseline;
+            gap: 14px;
+            padding: 10px 0;
+            border-bottom: 1px solid var(--border-subtle);
+            font-size: 0.82rem;
+        }
+
+        .commit-row:last-child {
+            border-bottom: none;
+        }
+
+        .commit-sha {
+            font-family: var(--mono);
+            font-size: 0.75rem;
+            color: var(--accent);
+            background: var(--accent-subtle);
+            padding: 2px 8px;
+            border-radius: var(--radius-sm);
+            flex-shrink: 0;
+        }
+
+        .commit-msg {
+            color: var(--text-primary);
+            flex: 1;
+        }
+
+        .commit-info {
+            color: var(--text-tertiary);
+            font-size: 0.75rem;
+            flex-shrink: 0;
+        }
+
+        /* ── File Tags ── */
+        .file-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .file-tag {
+            font-family: var(--mono);
+            font-size: 0.75rem;
+            padding: 4px 12px;
+            border-radius: var(--radius-sm);
+            background: var(--bg-elevated);
+            color: var(--text-secondary);
+            border-left: 2px solid transparent;
+        }
+
+        .file-tag.added { border-left-color: var(--green); color: var(--green-text); }
+        .file-tag.modified { border-left-color: var(--amber); color: var(--amber-text); }
+        .file-tag.deleted { border-left-color: var(--red); color: var(--red-text); }
+        .file-tag.untracked { border-left-color: var(--text-tertiary); color: var(--text-tertiary); }
+
+        /* ── Collapsible ── */
+        .collapsible .section-title {
+            cursor: pointer;
+            user-select: none;
+            padding: 14px 18px;
+            margin: 0;
+            background: var(--bg-surface);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-md);
+            transition: border-color 0.15s, border-radius 0.15s;
+        }
+
+        .collapsible .section-title:hover {
+            border-color: var(--border);
+        }
+
+        .collapsible.expanded .section-title {
+            border-bottom-left-radius: 0;
+            border-bottom-right-radius: 0;
+            border-bottom-color: var(--border-subtle);
+        }
+
+        .collapsible-body {
+            display: none;
+            background: var(--bg-surface);
+            border: 1px solid var(--border-subtle);
+            border-top: none;
+            border-radius: 0 0 var(--radius-md) var(--radius-md);
+            padding: 18px;
+        }
+
+        .collapsible.expanded .collapsible-body {
+            display: block;
+        }
+
+        /* ── Footer ── */
+        footer {
+            text-align: center;
+            padding-top: 48px;
+            border-top: 1px solid var(--border-subtle);
+            margin-top: 48px;
+        }
+
+        footer p {
+            font-size: 0.78rem;
+            color: var(--text-tertiary);
+            line-height: 1.8;
+        }
+
+        footer .brand {
+            font-family: var(--mono);
+            font-weight: 500;
+            color: var(--text-secondary);
+        }
+
+        /* ── Responsive ── */
+        @media (max-width: 640px) {
+            .container { padding: 32px 16px 64px; }
+            header h1 { font-size: 1.5rem; }
+            .stats { grid-template-columns: repeat(2, 1fr); }
+            .stat { padding: 20px 16px; }
+            .stat .number { font-size: 1.8rem; }
+            .meta-row { gap: 16px; }
+            .card-header { padding: 12px 14px; }
+            .analysis-field { grid-template-columns: 1fr; gap: 2px; }
+            .commit-row { flex-direction: column; gap: 4px; }
         }
     </style>
 </head>
@@ -358,18 +523,11 @@
     </div>
 
     <script>
-        // Toggle test details
-        document.querySelectorAll('.test-header').forEach(header => {
-            header.addEventListener('click', () => {
-                header.parentElement.classList.toggle('expanded');
-            });
+        document.querySelectorAll('.card-header').forEach(h => {
+            h.addEventListener('click', () => h.parentElement.classList.toggle('expanded'));
         });
-
-        // Toggle collapsible sections
-        document.querySelectorAll('.collapsible-header').forEach(header => {
-            header.addEventListener('click', () => {
-                header.parentElement.classList.toggle('expanded');
-            });
+        document.querySelectorAll('.collapsible .section-title').forEach(h => {
+            h.addEventListener('click', () => h.parentElement.classList.toggle('expanded'));
         });
     </script>
     {% block scripts %}{% endblock %}
