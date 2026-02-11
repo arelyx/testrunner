@@ -77,6 +77,70 @@ class TestLLMConfig:
         config = LLMConfig(api_key_env="MY_KEY")
         assert config.api_key_env == "MY_KEY"
 
+    def test_api_key_file_field(self):
+        """Test api_key_file field defaults to None."""
+        config = LLMConfig()
+        assert config.api_key_file is None
+
+        config = LLMConfig(api_key_file="my.secret")
+        assert config.api_key_file == "my.secret"
+
+    def test_resolve_api_key_from_env(self):
+        """Test resolving API key from environment variable."""
+        import os
+        from unittest.mock import patch
+
+        config = LLMConfig(provider="openrouter", api_key_env="TEST_KEY_VAR")
+        with patch.dict(os.environ, {"TEST_KEY_VAR": "my-secret-key"}):
+            assert config.resolve_api_key() == "my-secret-key"
+
+    def test_resolve_api_key_from_file(self):
+        """Test resolving API key from a secret file."""
+        config = LLMConfig(provider="openrouter", api_key_file="test.secret")
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            secret_path = Path(tmpdir) / "test.secret"
+            secret_path.write_text("file-secret-key\n")
+
+            assert config.resolve_api_key(tmpdir) == "file-secret-key"
+
+    def test_resolve_api_key_env_takes_precedence(self):
+        """Test that env var takes precedence over file."""
+        import os
+        from unittest.mock import patch
+
+        config = LLMConfig(
+            provider="openrouter",
+            api_key_env="TEST_KEY_VAR",
+            api_key_file="test.secret",
+        )
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            secret_path = Path(tmpdir) / "test.secret"
+            secret_path.write_text("file-key")
+
+            with patch.dict(os.environ, {"TEST_KEY_VAR": "env-key"}):
+                assert config.resolve_api_key(tmpdir) == "env-key"
+
+    def test_resolve_api_key_returns_none_when_missing(self):
+        """Test that resolve returns None when no key source is configured."""
+        import os
+        from unittest.mock import patch
+
+        config = LLMConfig(provider="ollama")
+        with patch.dict(os.environ, {}, clear=True):
+            assert config.resolve_api_key() is None
+
+    def test_resolve_api_key_strips_whitespace(self):
+        """Test that resolved key has whitespace stripped."""
+        config = LLMConfig(provider="openrouter", api_key_file="test.secret")
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            secret_path = Path(tmpdir) / "test.secret"
+            secret_path.write_text("  my-key-with-spaces  \n")
+
+            assert config.resolve_api_key(tmpdir) == "my-key-with-spaces"
+
 
 class TestTestRunnerConfig:
     """Tests for TestRunnerConfig."""
